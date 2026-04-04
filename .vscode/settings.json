@@ -1,0 +1,8 @@
+{
+    "java.project.sourcePaths": [
+        "backend\\src"
+    ],
+    "java.project.referencedLibraries": [
+        "backend\\lib\\mysql-connector-j-9.6.0\\jakarta.servlet-api-6.0.0.jar"
+    ]
+}

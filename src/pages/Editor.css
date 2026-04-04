@@ -1,0 +1,585 @@
+/* ══════════════════════════════════════════
+   EDITOR — Polished + Mobile Responsive
+   ══════════════════════════════════════════ */
+
+/* ── Page shell ── */
+.ed-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--ci-bg, #0f0f1a);
+    color: var(--ci-text, #f1f5f9);
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Top bar ── */
+.ed-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    height: 52px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.ed-back {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+
+.ed-back:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+    transform: translateX(-2px);
+}
+
+.ed-problem-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.ed-problem-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ed-diff-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.ed-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.ed-lang-badge {
+    font-size: 12px;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 4px 10px;
+}
+
+/* ── Action buttons ── */
+.ed-run-btn,
+.ed-submit-btn,
+.ed-ai-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+
+.ed-run-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ed-run-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ed-submit-btn {
+    background: linear-gradient(135deg, #00E5A0, #00b87a);
+    color: #0f172a;
+}
+
+.ed-submit-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 229, 160, 0.35);
+}
+
+.ed-ai-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+}
+
+.ed-ai-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+    animation: pulse-glow 1.5s ease infinite;
+}
+
+.ed-run-btn:disabled,
+.ed-submit-btn:disabled,
+.ed-ai-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ed-run-btn.loading,
+.ed-submit-btn.loading,
+.ed-ai-btn.loading {
+    opacity: 0.75;
+}
+
+/* ── Spinner ── */
+.spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+/* ── Main layout ── */
+.ed-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ── Left panel ── */
+.ed-left {
+    width: 400px;
+    min-width: 320px;
+    max-width: 45%;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    background: #0d0d1f;
+    overflow: hidden;
+    animation: slideInLeft 0.3s ease both;
+}
+
+.ed-left-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.02);
+    flex-shrink: 0;
+}
+
+.ed-tab {
+    flex: 1;
+    padding: 11px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.ed-tab:hover {
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.ed-tab--active {
+    color: #a5b4fc;
+    border-bottom-color: #6366f1;
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.ed-left-body {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.ed-left-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ed-left-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ed-left-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* ── Problem panel ── */
+.prob-panel {
+    padding: 20px;
+    animation: fadeInUp 0.3s ease both;
+}
+
+.prob-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin: 0 0 12px;
+    line-height: 1.3;
+}
+
+.prob-desc {
+    font-size: 13.5px;
+    color: #94a3b8;
+    line-height: 1.75;
+    margin: 0 0 20px;
+}
+
+.prob-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+}
+
+.prob-example {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prob-ex-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.prob-ex-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    min-width: 48px;
+    padding-top: 1px;
+}
+
+.prob-ex-code {
+    font-size: 12.5px;
+    font-family: 'Fira Code', monospace;
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: 5px;
+}
+
+.prob-constraints {
+    margin: 0;
+    padding: 0 0 0 16px;
+}
+
+.prob-constraints li {
+    font-size: 12.5px;
+    color: #64748b;
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+.prob-constraints li code {
+    color: #a5b4fc;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+/* ── Output panel ── */
+.output-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    animation: fadeInUp 0.3s ease both;
+}
+
+.output-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 10px;
+    color: #334155;
+    text-align: center;
+    padding: 20px;
+}
+
+.output-empty span {
+    font-size: 40px;
+}
+
+.output-empty p {
+    font-size: 13px;
+    margin: 0;
+    color: #475569;
+}
+
+.output-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 100%;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.output-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.08);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.output-pre {
+    margin: 0;
+    padding: 20px;
+    font-size: 12.5px;
+    font-family: 'Fira Code', monospace;
+    line-height: 1.7;
+    color: #94a3b8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    flex: 1;
+    overflow-y: auto;
+    animation: fadeIn 0.25s ease both;
+}
+
+.output-accepted {
+    color: #34d399;
+}
+
+.output-wrong {
+    color: #f87171;
+}
+
+.output-error {
+    color: #fbbf24;
+}
+
+/* ── AI panel ── */
+.ai-panel {
+    height: 100%;
+    overflow-y: auto;
+    animation: fadeInUp 0.3s ease both;
+}
+
+.ai-panel::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ai-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+}
+
+.ai-result {
+    animation: fadeInUp 0.35s ease both;
+}
+
+/* ── Right panel ── */
+.ed-right {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    background: #1e1e1e;
+    min-height: 0;
+    animation: fadeIn 0.3s ease both;
+}
+
+.ed-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #252526;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.ed-file-name {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.ed-editor-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.ed-icon-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #64748b;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ed-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+    transform: scale(1.05);
+}
+
+/* ── Status bar ── */
+.ed-statusbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 14px;
+    height: 26px;
+    background: #007acc;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════
+   MOBILE RESPONSIVE  (≤ 768px)
+   ══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* Stack layout vertically on mobile */
+    .ed-layout {
+        flex-direction: column;
+    }
+
+    /* Left panel becomes full width, fixed height */
+    .ed-left {
+        width: 100%;
+        min-width: unset;
+        max-width: 100%;
+        height: 45vh;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    /* Right panel takes remaining space */
+    .ed-right {
+        height: 55vh;
+    }
+
+    /* Top bar: compress on mobile */
+    .ed-topbar {
+        padding: 0 10px;
+        gap: 8px;
+        height: 48px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .ed-problem-title {
+        font-size: 12px;
+        max-width: 120px;
+    }
+
+    .ed-lang-badge {
+        display: none;
+    }
+
+    .ed-run-btn,
+    .ed-submit-btn,
+    .ed-ai-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    /* Hide button text on very small screens, show icons only */
+    @media (max-width: 480px) {
+        .ed-back {
+            padding: 6px 8px;
+        }
+
+        .ed-diff-badge {
+            display: none;
+        }
+    }
+
+    /* IO panel height */
+    .ed-right>div[style*="flex:0 0 62%"],
+    .ed-right>div[style*="flex: 0 0 62%"] {
+        flex: 0 0 55% !important;
+    }
+
+    .ed-right>div[style*="flex:0 0 35%"],
+    .ed-right>div[style*="flex: 0 0 35%"] {
+        flex: 0 0 42% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .ed-left {
+        height: 50vh;
+    }
+
+    .ed-right {
+        height: 50vh;
+    }
+
+    .ed-tab {
+        font-size: 11px;
+        padding: 10px 4px;
+    }
+
+    .prob-title {
+        font-size: 15px;
+    }
+}
+
+/* ── Button press feedback ── */
+.ed-run-btn:active,
+.ed-submit-btn:active,
+.ed-ai-btn:active {
+    transform: translateY(1px) scale(0.98);
+}
+
+/* ── Tab switch animation helper ── */
+.animate-fadeIn {
+    animation: fadeIn 0.2s ease both;
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.3s ease both;
+}
