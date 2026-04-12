@@ -4,13 +4,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
     proxy: {
-      '/codeinsight': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
-      }
+      '/codeinsight': 'http://localhost:8080'
     }
+  },
+  build: {
+    outDir: 'dist'
   }
 })

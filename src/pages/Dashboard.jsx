@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import './Dashboard.css';
+import API from '../api.js';
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -23,7 +24,6 @@ export default function Dashboard() {
         Hard: { color: '#FF3D9A', bg: 'rgba(255,61,154,0.08)', border: 'rgba(255,61,154,0.2)' },
     };
 
-    // Fetch everything on mount
     useEffect(() => {
         fetchProblems();
         fetchUserStats();
@@ -32,7 +32,7 @@ export default function Dashboard() {
 
     async function fetchProblems() {
         try {
-            const res = await fetch('/codeinsight/problems', { credentials: 'include' });
+            const res = await fetch(`${API}/codeinsight/problems`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setProblems(data.problems.map(p => ({
@@ -49,7 +49,7 @@ export default function Dashboard() {
 
     async function fetchUserStats() {
         try {
-            const res = await fetch('/codeinsight/user', { credentials: 'include' });
+            const res = await fetch(`${API}/codeinsight/user`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setUserStats(data);
@@ -62,7 +62,7 @@ export default function Dashboard() {
 
     async function fetchLeaderboard() {
         try {
-            const res = await fetch('/codeinsight/leaderboard', { credentials: 'include' });
+            const res = await fetch(`${API}/codeinsight/leaderboard`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) setLeaderboard(data.leaderboard);
         } catch (e) {
@@ -226,7 +226,7 @@ export default function Dashboard() {
                                                 </span>
                                                 <span className="p-status">
                                                     {isSolved
-                                                        ? <span className="status-solved">✓ Solved</span>
+                                                        ? <span className="status-solved">✅ Solved</span>
                                                         : <span className="status-todo">— Todo</span>}
                                                 </span>
                                                 <button

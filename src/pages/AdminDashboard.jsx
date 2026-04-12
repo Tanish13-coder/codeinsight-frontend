@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import './AdminDashboard.css';
+import API from '../api.js';
 
 const DC = {
     Easy: { color: '#00E5A0', bg: 'rgba(0,229,160,0.08)', border: 'rgba(0,229,160,0.2)' },
@@ -41,7 +42,7 @@ export default function AdminDashboard() {
 
     async function fetchProblems() {
         try {
-            const res = await fetch('/codeinsight/problems', { credentials: 'include' });
+            const res = await fetch(`${API}/codeinsight/problems`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setProblems(data.problems.map(p => ({
@@ -58,7 +59,7 @@ export default function AdminDashboard() {
 
     async function fetchSubmissions() {
         try {
-            const res = await fetch('/codeinsight/submit', { credentials: 'include' });
+            const res = await fetch(`${API}/codeinsight/submit`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) setSubmissions(data.submissions);
         } catch (e) {
@@ -81,7 +82,6 @@ export default function AdminDashboard() {
         setSaveError('');
 
         try {
-            // Parse test cases
             const testCasesArray = form.testCases
                 .split('\n')
                 .filter(line => line.includes('→'))
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
                     return { input, expected };
                 });
 
-            const res = await fetch('/codeinsight/problems', {
+            const res = await fetch(`${API}/codeinsight/problems`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -107,17 +107,16 @@ export default function AdminDashboard() {
             });
 
             const data = await res.json();
-
             if (data.success) {
                 setForm(EMPTY_FORM);
                 setSaved(true);
                 setTimeout(() => setSaved(false), 3000);
-                fetchProblems(); // refresh list
+                fetchProblems();
             } else {
                 setSaveError(data.message || 'Upload failed.');
             }
         } catch (e) {
-            setSaveError('Network error. Make sure Tomcat is running.');
+            setSaveError('Network error.');
         } finally {
             setSaving(false);
         }
@@ -126,7 +125,7 @@ export default function AdminDashboard() {
     async function handleDeleteProblem(id) {
         if (!window.confirm('Delete this problem? This cannot be undone.')) return;
         try {
-            const res = await fetch(`/codeinsight/problems?id=${id}`, {
+            const res = await fetch(`${API}/codeinsight/problems?id=${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -141,17 +140,12 @@ export default function AdminDashboard() {
         }
     }
 
-    // Stats
     const totalProblems = problems.length;
     const totalSubmissions = submissions.length;
     const acceptedCount = submissions.filter(s => s.verdict === 'Accepted').length;
-    const acceptanceRate = totalSubmissions > 0
-        ? Math.round((acceptedCount / totalSubmissions) * 100) : 0;
+    const acceptanceRate = totalSubmissions > 0 ? Math.round((acceptedCount / totalSubmissions) * 100) : 0;
     const totalUsers = [...new Set(submissions.map(s => s.username))].length;
-
-    const filteredSubs = subFilter === 'All'
-        ? submissions
-        : submissions.filter(s => s.verdict === subFilter);
+    const filteredSubs = subFilter === 'All' ? submissions : submissions.filter(s => s.verdict === subFilter);
 
     return (
         <div className="ad-page">
@@ -212,7 +206,6 @@ export default function AdminDashboard() {
                                 ))}
                             </div>
 
-                            {/* Recent submissions */}
                             <div className="ad-section">
                                 <div className="ad-section-head">
                                     <h2 className="ad-section-title">Recent Submissions</h2>
@@ -222,10 +215,7 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="ad-sub-table">
                                     <div className="ad-sub-header">
-                                        <span>User</span>
-                                        <span>Problem</span>
-                                        <span>Verdict</span>
-                                        <span>Time</span>
+                                        <span>User</span><span>Problem</span><span>Verdict</span><span>Time</span>
                                     </div>
                                     {submissions.slice(0, 5).map(s => {
                                         const vs = VS[s.verdict] || VS['Wrong Answer'];
@@ -252,7 +242,6 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            {/* Difficulty breakdown */}
                             <div className="ad-section">
                                 <h2 className="ad-section-title" style={{ padding: '16px 20px 0' }}>
                                     Problems by Difficulty
@@ -283,9 +272,7 @@ export default function AdminDashboard() {
                             </div>
 
                             {saved && (
-                                <div className="ad-success">
-                                    ✓ Problem uploaded successfully and added to the problem set!
-                                </div>
+                                <div className="ad-success">✅ Problem uploaded successfully!</div>
                             )}
                             {saveError && (
                                 <div style={{
@@ -295,7 +282,7 @@ export default function AdminDashboard() {
                                     borderRadius: 'var(--radius-md)',
                                     color: '#FF3D9A', fontSize: 14,
                                 }}>
-                                    ⚠ {saveError}
+                                    ⚠️ {saveError}
                                 </div>
                             )}
 
@@ -344,7 +331,7 @@ export default function AdminDashboard() {
                                 <div className="uf-field">
                                     <label className="uf-label">Constraints</label>
                                     <textarea className="uf-input uf-textarea" name="constraints"
-                                        placeholder="One per line e.g.:&#10;2 ≤ nums.length ≤ 10⁴"
+                                        placeholder="One per line"
                                         value={form.constraints} onChange={handleFormChange} rows={3} />
                                 </div>
 
@@ -363,7 +350,7 @@ export default function AdminDashboard() {
                                         <span className="uf-hint"> (format: input → expected, one per line)</span>
                                     </label>
                                     <textarea className="uf-input uf-textarea uf-code" name="testCases"
-                                        placeholder="[2,7,11,15],9 → [0,1]&#10;[3,2,4],6 → [1,2]"
+                                        placeholder="[2,7,11,15],9 → [0,1]"
                                         value={form.testCases} onChange={handleFormChange} rows={4} />
                                 </div>
 
@@ -398,11 +385,7 @@ export default function AdminDashboard() {
                             ) : (
                                 <div className="ad-prob-table">
                                     <div className="ad-prob-header">
-                                        <span>#</span>
-                                        <span>Title</span>
-                                        <span>Difficulty</span>
-                                        <span>Tags</span>
-                                        <span>Actions</span>
+                                        <span>#</span><span>Title</span><span>Difficulty</span><span>Tags</span><span>Actions</span>
                                     </div>
                                     {problems.map(p => {
                                         const dc = DC[p.difficulty] || DC.Easy;
@@ -415,13 +398,10 @@ export default function AdminDashboard() {
                                                     {p.difficulty}
                                                 </span>
                                                 <span className="ap-tags">
-                                                    {p.tags.map(t => (
-                                                        <span key={t} className="ap-tag">{t}</span>
-                                                    ))}
+                                                    {p.tags.map(t => <span key={t} className="ap-tag">{t}</span>)}
                                                 </span>
                                                 <div className="ap-actions">
                                                     <button className="ap-btn ap-btn--delete"
-                                                        title="Delete"
                                                         onClick={() => handleDeleteProblem(p.id)}>
                                                         🗑️
                                                     </button>
@@ -459,13 +439,8 @@ export default function AdminDashboard() {
 
                             <div className="ad-sub-table ad-sub-table--full">
                                 <div className="ad-sub-header ad-sub-header--full">
-                                    <span>User</span>
-                                    <span>Problem</span>
-                                    <span>Difficulty</span>
-                                    <span>Verdict</span>
-                                    <span>Runtime</span>
-                                    <span>Time</span>
-                                    <span>Code</span>
+                                    <span>User</span><span>Problem</span><span>Difficulty</span>
+                                    <span>Verdict</span><span>Runtime</span><span>Time</span><span>Code</span>
                                 </div>
                                 {filteredSubs.map(s => {
                                     const vs = VS[s.verdict] || VS['Wrong Answer'];
@@ -510,9 +485,7 @@ export default function AdminDashboard() {
                     <div className="modal-box" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <div>
-                                <div className="modal-title">
-                                    {viewCode.username} — {viewCode.problem}
-                                </div>
+                                <div className="modal-title">{viewCode.username} — {viewCode.problem}</div>
                                 <div className="modal-sub">Java · {viewCode.time}</div>
                             </div>
                             <button className="modal-close" onClick={() => setViewCode(null)}>✕</button>

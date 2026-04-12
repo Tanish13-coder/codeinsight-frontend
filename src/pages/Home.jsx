@@ -4,45 +4,45 @@ import './home.css';
 
 const features = [
     {
-        icon: '⚡',
+        icon: 'âš¡',
         tag: 'Editor',
         title: 'Java Code Editor',
-        desc: 'A full-featured Monaco-powered editor with syntax highlighting, auto-complete, and real-time error detection — built for serious coders.',
+        desc: 'A full-featured Monaco-powered editor with syntax highlighting, auto-complete, and real-time error detection â€” built for serious coders.',
         accent: '#00D4FF',
     },
     {
-        icon: '🤖',
+        icon: 'ðŸ¤–',
         tag: 'AI',
         title: 'AI Insight Engine',
-        desc: 'Get instant AI-powered feedback on your code — time complexity analysis, optimization hints, bug detection, and clean code suggestions.',
+        desc: 'Get instant AI-powered feedback on your code â€” time complexity analysis, optimization hints, bug detection, and clean code suggestions.',
         accent: '#7B61FF',
     },
     {
-        icon: '🏆',
+        icon: 'ðŸ†',
         tag: 'Compete',
         title: 'Live Leaderboard',
-        desc: 'Compete with peers in real time. Rankings update instantly after every submission — see exactly where you stand.',
+        desc: 'Compete with peers in real time. Rankings update instantly after every submission â€” see exactly where you stand.',
         accent: '#00E5A0',
     },
     {
-        icon: '📊',
+        icon: 'ðŸ“Š',
         tag: 'Analytics',
         title: 'Personal Analytics',
-        desc: 'Deep-dive into your coding journey — problem categories, submission history, acceptance rate, and performance trends over time.',
+        desc: 'Deep-dive into your coding journey â€” problem categories, submission history, acceptance rate, and performance trends over time.',
         accent: '#FF6B35',
     },
     {
-        icon: '🧩',
+        icon: 'ðŸ§©',
         tag: 'Problems',
         title: 'Curated Problem Set',
-        desc: 'Hundreds of problems across Easy, Medium, and Hard — tagged by topic, company, and concept so you practice what matters most.',
+        desc: 'Hundreds of problems across Easy, Medium, and Hard â€” tagged by topic, company, and concept so you practice what matters most.',
         accent: '#FF3D9A',
     },
     {
-        icon: '🛡️',
+        icon: 'ðŸ›¡ï¸',
         tag: 'Admin',
         title: 'Admin Panel',
-        desc: 'Educators and admins can upload problems, define test cases, monitor submissions, and track student progress — all in one place.',
+        desc: 'Educators and admins can upload problems, define test cases, monitor submissions, and track student progress â€” all in one place.',
         accent: '#00D4FF',
     },
 ];
@@ -50,7 +50,7 @@ const features = [
 const steps = [
     { num: '01', title: 'Pick a Problem', desc: 'Browse the curated problem set filtered by difficulty, topic, or company tag.' },
     { num: '02', title: 'Write Your Code', desc: 'Use the Java editor with syntax highlighting, hints, and a clean workspace.' },
-    { num: '03', title: 'Run & Submit', desc: 'Execute against hidden test cases. Get a verdict — Accepted, Wrong Answer, or TLE.' },
+    { num: '03', title: 'Run & Submit', desc: 'Execute against hidden test cases. Get a verdict â€” Accepted, Wrong Answer, or TLE.' },
     { num: '04', title: 'Get AI Insight', desc: 'Receive instant AI feedback on complexity, style, and optimizations specific to your code.' },
 ];
 
@@ -78,20 +78,20 @@ export default function Home() {
                                 <span className="gradient-text">Think deeper.</span>
                             </h1>
                             <p className="hero-desc animate-fadeUp delay-2">
-                                CodeInsight combines a professional Java editor, intelligent AI feedback, and real-time leaderboards — the next evolution beyond LeetCode.
+                                CodeInsight combines a professional Java editor, intelligent AI feedback, and real-time leaderboards â€” the next evolution beyond LeetCode.
                             </p>
                             <div className="hero-actions animate-fadeUp delay-3">
                                 <Link to="/register">
-                                    <button className="btn-primary btn-lg">Start Coding Free →</button>
+                                    <button className="btn-primary btn-lg">Start Coding Free â†’</button>
                                 </Link>
                                 <Link to="/login">
                                     <button className="btn-ghost btn-lg">Sign In</button>
                                 </Link>
                             </div>
                             <div className="hero-badges animate-fadeUp delay-4">
-                                <span className="badge">✓ Free to start</span>
-                                <span className="badge">✓ Java editor built-in</span>
-                                <span className="badge">✓ Real AI feedback</span>
+                                <span className="badge">âœ“ Free to start</span>
+                                <span className="badge">âœ“ Java editor built-in</span>
+                                <span className="badge">âœ“ Real AI feedback</span>
                             </div>
                         </div>
 
@@ -104,7 +104,7 @@ export default function Home() {
                                         <span style={{ background: '#27C93F' }} />
                                     </div>
                                     <span className="code-card-title">TwoSum.java</span>
-                                    <span className="verdict passed">✓ Accepted</span>
+                                    <span className="verdict passed">âœ“ Accepted</span>
                                 </div>
                                 <div className="code-block">
                                     {`public int[] twoSum(
@@ -121,7 +121,7 @@ export default function Home() {
 }`}
                                 </div>
                                 <div className="ai-badge">
-                                    🤖 AI: O(n) time · O(n) space · Optimal solution
+                                    ðŸ¤– AI: O(n) time Â· O(n) space Â· Optimal solution
                                 </div>
                             </div>
 
@@ -147,7 +147,7 @@ export default function Home() {
                             { value: '500+', label: 'Problems', sub: 'Easy to Hard' },
                             { value: '12K+', label: 'Coders', sub: 'Active this month' },
                             { value: '98%', label: 'Uptime', sub: 'Reliable execution' },
-                            { value: '4.9★', label: 'Rating', sub: 'From our users' },
+                            { value: '4.9â˜…', label: 'Rating', sub: 'From our users' },
                         ].map((s) => (
                             <div className="stat-card" key={s.label}>
                                 <div className="stat-value">{s.value}</div>
@@ -166,7 +166,7 @@ export default function Home() {
                         <span className="tag">Platform Features</span>
                         <h2 className="section-title">Everything you need to<br />level up your coding</h2>
                         <p className="section-desc">
-                            Built for students, developers, and educators — CodeInsight gives you the tools to practice, improve, and compete.
+                            Built for students, developers, and educators â€” CodeInsight gives you the tools to practice, improve, and compete.
                         </p>
                     </div>
                     <div className="features-grid">
@@ -225,7 +225,7 @@ export default function Home() {
                         </p>
                         <div className="hero-actions">
                             <Link to="/register">
-                                <button className="btn-primary btn-lg">Create Free Account →</button>
+                                <button className="btn-primary btn-lg">Create Free Account â†’</button>
                             </Link>
                             <Link to="/login">
                                 <button className="btn-ghost btn-lg">Sign In</button>
@@ -243,7 +243,7 @@ export default function Home() {
                             <span style={{ color: '#00D4FF', fontWeight: 800 }}>{'</>'}</span>
                             CodeInsight
                         </div>
-                        <p className="footer-copy">© 2025 CodeInsight. Built for coders, by coders.</p>
+                        <p className="footer-copy">Â© 2025 CodeInsight. Built for coders, by coders.</p>
                         <div className="footer-links">
                             <span>Privacy</span>
                             <span>Terms</span>
