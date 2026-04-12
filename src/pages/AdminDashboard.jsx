@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import './AdminDashboard.css';
 import API from '../api.js';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 const DC = {
     Easy: { color: '#00E5A0', bg: 'rgba(0,229,160,0.08)', border: 'rgba(0,229,160,0.2)' },
@@ -24,6 +25,10 @@ const EMPTY_FORM = {
 };
 
 export default function AdminDashboard() {
+    const { theme, toggleTheme } = useTheme();
+    const adminUsername = localStorage.getItem('username') || 'Admin';
+    const adminRole = localStorage.getItem('role') || 'admin';
+
     const [tab, setTab] = useState('overview');
     const [problems, setProblems] = useState([]);
     const [submissions, setSubmissions] = useState([]);
@@ -39,6 +44,12 @@ export default function AdminDashboard() {
         fetchProblems();
         fetchSubmissions();
     }, []);
+
+    useEffect(() => {
+        if (tab === 'submissions' || tab === 'overview') {
+            fetchSubmissions();
+        }
+    }, [tab]);
 
     async function fetchProblems() {
         try {
@@ -59,11 +70,15 @@ export default function AdminDashboard() {
 
     async function fetchSubmissions() {
         try {
-            const res = await fetch(`${API}/codeinsight/submit`, { credentials: 'include' });
+            const res = await fetch(`${API}/codeinsight/submit`, {
+                method: 'GET',
+                credentials: 'include',
+            });
             const data = await res.json();
             if (data.success) setSubmissions(data.submissions);
+            else console.error('Submissions fetch failed:', data.message);
         } catch (e) {
-            console.error('Failed to load submissions.');
+            console.error('Failed to load submissions:', e);
         }
     }
 
@@ -155,7 +170,7 @@ export default function AdminDashboard() {
                 {/* SIDEBAR */}
                 <aside className="ad-sidebar">
                     <div className="ad-sidebar-head">
-                        <div className="ad-shield">🛡️</div>
+                        <div className="ad-shield"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
                         <div>
                             <div className="ad-role-title">Admin Panel</div>
                             <div className="ad-role-sub">CodeInsight Platform</div>
@@ -164,17 +179,18 @@ export default function AdminDashboard() {
 
                     <nav className="ad-nav">
                         {[
-                            { key: 'overview', icon: '📊', label: 'Overview' },
-                            { key: 'upload', icon: '➕', label: 'Upload Problem' },
-                            { key: 'problems', icon: '🧩', label: 'Manage Problems' },
-                            { key: 'submissions', icon: '📨', label: 'Submissions' },
+                            { key: 'overview', label: 'Overview', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> },
+                            { key: 'upload', label: 'Upload Problem', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
+                            { key: 'problems', label: 'Manage Problems', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> },
+                            { key: 'submissions', label: 'Submissions', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> },
+                            { key: 'settings', label: 'Settings', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
                         ].map(item => (
                             <button
                                 key={item.key}
                                 className={`ad-nav-btn ${tab === item.key ? 'ad-nav-btn--active' : ''}`}
                                 onClick={() => setTab(item.key)}
                             >
-                                <span>{item.icon}</span>{item.label}
+                                {item.svg}{item.label}
                             </button>
                         ))}
                     </nav>
@@ -193,10 +209,22 @@ export default function AdminDashboard() {
 
                             <div className="ad-stats-grid">
                                 {[
-                                    { icon: '🧩', label: 'Total Problems', value: totalProblems, color: '#00D4FF' },
-                                    { icon: '👥', label: 'Active Users', value: totalUsers, color: '#7B61FF' },
-                                    { icon: '📨', label: 'Total Submissions', value: totalSubmissions, color: '#00E5A0' },
-                                    { icon: '✅', label: 'Acceptance Rate', value: `${acceptanceRate}%`, color: '#FFBD2E' },
+                                    {
+                                        icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7-7H4a2 2 0 0 0-2 2v17z"/><path d="M14 2v6h6"/><path d="M10 13H8"/><path d="M16 17H8"/><path d="M13 9H8"/></svg>,
+                                        label: 'Total Problems', value: totalProblems, color: '#00D4FF',
+                                    },
+                                    {
+                                        icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+                                        label: 'Active Users', value: totalUsers, color: '#7B61FF',
+                                    },
+                                    {
+                                        icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+                                        label: 'Total Submissions', value: totalSubmissions, color: '#00E5A0',
+                                    },
+                                    {
+                                        icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+                                        label: 'Acceptance Rate', value: `${acceptanceRate}%`, color: '#FFBD2E',
+                                    },
                                 ].map(s => (
                                     <div className="ad-stat-card" key={s.label}>
                                         <div className="ad-stat-icon" style={{ color: s.color }}>{s.icon}</div>
@@ -272,17 +300,22 @@ export default function AdminDashboard() {
                             </div>
 
                             {saved && (
-                                <div className="ad-success">✅ Problem uploaded successfully!</div>
+                                <div className="ad-success">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Problem uploaded successfully!
+                                </div>
                             )}
                             {saveError && (
                                 <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
                                     padding: '14px 18px', marginBottom: 20,
                                     background: 'rgba(255,61,154,0.08)',
                                     border: '1px solid rgba(255,61,154,0.25)',
                                     borderRadius: 'var(--radius-md)',
                                     color: '#FF3D9A', fontSize: 14,
                                 }}>
-                                    ⚠️ {saveError}
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    {saveError}
                                 </div>
                             )}
 
@@ -362,7 +395,10 @@ export default function AdminDashboard() {
                                     <button type="submit"
                                         className={`btn-primary uf-submit ${saving ? 'loading' : ''}`}
                                         disabled={saving}>
-                                        {saving ? <span className="spinner" style={{ borderTopColor: 'var(--ci-bg)' }} /> : '➕'}
+                                        {saving
+                                            ? <span className="spinner" style={{ borderTopColor: 'var(--ci-bg)' }} />
+                                            : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        }
                                         {saving ? 'Uploading...' : 'Upload Problem'}
                                     </button>
                                 </div>
@@ -402,8 +438,9 @@ export default function AdminDashboard() {
                                                 </span>
                                                 <div className="ap-actions">
                                                     <button className="ap-btn ap-btn--delete"
-                                                        onClick={() => handleDeleteProblem(p.id)}>
-                                                        🗑️
+                                                        onClick={() => handleDeleteProblem(p.id)}
+                                                        aria-label="Delete problem">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                                                     </button>
                                                 </div>
                                             </div>
@@ -476,6 +513,83 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                     )}
+                    {/* ADMIN SETTINGS TAB */}
+                    {tab === 'settings' && (
+                        <div className="animate-fadeIn">
+                            <div className="ad-header">
+                                <h1 className="ad-title">Settings</h1>
+                                <p className="ad-subtitle">Platform and account configuration</p>
+                            </div>
+
+                            <div className="settings-sections">
+
+                                {/* Appearance */}
+                                <div className="settings-card">
+                                    <div className="settings-card-title">Appearance</div>
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Theme</span>
+                                            <span className="settings-hint">Switch between dark and light mode</span>
+                                        </div>
+                                        <button
+                                            className="theme-toggle-btn"
+                                            onClick={toggleTheme}
+                                            aria-label="Toggle theme"
+                                        >
+                                            <span className="theme-toggle-icon">
+                                                {theme === 'dark'
+                                                    ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                                                    : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                                                }
+                                            </span>
+                                            <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+                                            <span className="theme-toggle-pill" data-active={theme === 'light'} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Platform Settings */}
+                                <div className="settings-card">
+                                    <div className="settings-card-title">Platform Settings</div>
+                                    <p style={{ fontSize: 13, color: 'var(--ci-text3)', marginBottom: 4 }}>
+                                        Read-only configuration values for the current deployment.
+                                    </p>
+                                    {[
+                                        { label: 'Backend URL', value: 'http://localhost:8080' },
+                                        { label: 'Frontend URL', value: 'http://localhost:5173' },
+                                        { label: 'Judge Timeout', value: '5 seconds' },
+                                        { label: 'Max Submission Limit', value: '200 per day' },
+                                    ].map(item => (
+                                        <div className="settings-row" key={item.label}>
+                                            <div className="settings-label-group">
+                                                <span className="settings-label">{item.label}</span>
+                                            </div>
+                                            <code className="settings-value">{item.value}</code>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Account Info */}
+                                <div className="settings-card">
+                                    <div className="settings-card-title">Account Info</div>
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Username</span>
+                                        </div>
+                                        <span className="settings-value">{adminUsername}</span>
+                                    </div>
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Role</span>
+                                        </div>
+                                        <span className="settings-badge settings-badge--admin">{adminRole}</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    )}
+
                 </main>
             </div>
 
@@ -488,7 +602,9 @@ export default function AdminDashboard() {
                                 <div className="modal-title">{viewCode.username} — {viewCode.problem}</div>
                                 <div className="modal-sub">Java · {viewCode.time}</div>
                             </div>
-                            <button className="modal-close" onClick={() => setViewCode(null)}>✕</button>
+                            <button className="modal-close" onClick={() => setViewCode(null)} aria-label="Close">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
                         </div>
                         <pre className="modal-code">
                             {viewCode.code || '// Code not available'}

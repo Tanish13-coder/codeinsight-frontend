@@ -31,12 +31,30 @@ public class Solution {
     }
 }`;
 
+function readEditorPrefs() {
+    try {
+        const raw = localStorage.getItem('ci-editor-prefs');
+        const parsed = raw ? JSON.parse(raw) : {};
+        return {
+            fontSize: parsed.fontSize || 14,
+            tabSize: parsed.tabSize || 4,
+            lineNumbers: parsed.lineNumbers !== undefined ? parsed.lineNumbers : true,
+            wordWrap: parsed.wordWrap !== undefined ? parsed.wordWrap : true,
+            minimap: parsed.minimap !== undefined ? parsed.minimap : false,
+        };
+    } catch {
+        return { fontSize: 14, tabSize: 4, lineNumbers: true, wordWrap: true, minimap: false };
+    }
+}
+
 export default function Editor() {
     const { id } = useParams();
     const navigate = useNavigate();
 
     const username = localStorage.getItem('username') || 'U';
     const role = localStorage.getItem('role');
+
+    const editorPrefs = readEditorPrefs();
 
     const [problem, setProblem] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -83,7 +101,7 @@ export default function Editor() {
         : { color: '#94a3b8', bg: '', border: '' };
 
     /* ── Run ─────────────────────────────────────── */
-    function handleRun() {
+    async function handleRun() {
         if (running || submitting) return;
         setRunning(true);
         setActiveTab('output');
@@ -94,28 +112,32 @@ export default function Editor() {
         setIoError('');
         setIoStatus(null);
 
-        setTimeout(() => {
-            const hasMain = code.includes('main');
-            const hasPrint = code.includes('System.out');
-            const hasLogic = code.length > 200;
-            const hasUnclosed = (code.match(/\{/g) || []).length !== (code.match(/\}/g) || []).length;
-
-            if (!hasMain) {
+        try {
+            const res = await fetch(`${API}/codeinsight/run`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, input: customInput }),
+            });
+            const data = await res.json();
+            if (data.verdict === 'Compilation Error') {
                 setIoStatus('compileError');
-                setIoError('Solution.java:1: error: Main method not found in class Solution.\nPlease define:\n   public static void main(String[] args)\n\n1 error');
-            } else if (hasUnclosed) {
-                setIoStatus('compileError');
-                setIoError('Solution.java: error: reached end of file while parsing\n^\n1 error\n\nHint: Check for missing or extra { } braces.');
-            } else if (!hasLogic) {
+                setIoError(data.error || 'Compilation failed.');
+            } else if (data.verdict === 'Runtime Error' || data.verdict === 'TLE') {
                 setIoStatus('error');
-                setIoError('Solution body appears empty. Write your logic and try again.');
+                setIoError((data.verdict === 'TLE' ? 'Time Limit Exceeded (5s)\n' : '') + (data.error || ''));
+                if (data.output) setIoOutput(data.output);
             } else {
                 setIoStatus('success');
-                const inp = customInput.trim() ? `Custom Input:\n${customInput.trim()}\n\n` : '';
-                setIoOutput(`${inp}Output:\n${hasPrint ? '[Your printed output would appear here]' : '(no System.out.println found)'}\n\n──────────────────\nRuntime : 3 ms\nMemory  : 42.1 MB`);
+                const inp = customInput.trim() ? `Input:\n${customInput.trim()}\n\n` : '';
+                setIoOutput(`${inp}Output:\n${data.output || '(no output)'}\n\nRuntime: ${data.runtime || '-'}`);
             }
+        } catch (err) {
+            setIoStatus('error');
+            setIoError('Network error — could not reach server.');
+        } finally {
             setRunning(false);
-        }, 1200);
+        }
     }
 
     /* ── Submit ──────────────────────────────────── */
@@ -195,7 +217,7 @@ export default function Editor() {
         <div className="ed-page">
             <EditorNav username={username} role={role} onLogout={handleLogout} />
             <div className="ed-center-msg" style={{ flexDirection: 'column', gap: 16 }}>
-                <div style={{ fontSize: 48 }}>🔍</div>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <div style={{ fontSize: 18, color: '#64748b' }}>Problem not found.</div>
                 <button className="ed-back" onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
             </div>
@@ -384,12 +406,22 @@ export default function Editor() {
                             value={code}
                             onChange={(v) => setCode(v || '')}
                             options={{
-                                fontSize: 14, fontFamily: '"Fira Code","Cascadia Code","Consolas",monospace',
-                                fontLigatures: true, minimap: { enabled: false }, scrollBeyondLastLine: false,
-                                lineNumbers: 'on', renderLineHighlight: 'all', matchBrackets: 'always',
-                                autoIndent: 'full', formatOnPaste: true, formatOnType: true,
-                                tabSize: 4, insertSpaces: true, wordWrap: 'on',
-                                smoothScrolling: true, cursorBlinking: 'smooth',
+                                fontSize: editorPrefs.fontSize,
+                                fontFamily: '"Fira Code","Cascadia Code","Consolas",monospace',
+                                fontLigatures: true,
+                                minimap: { enabled: editorPrefs.minimap },
+                                scrollBeyondLastLine: false,
+                                lineNumbers: editorPrefs.lineNumbers ? 'on' : 'off',
+                                renderLineHighlight: 'all',
+                                matchBrackets: 'always',
+                                autoIndent: 'full',
+                                formatOnPaste: true,
+                                formatOnType: true,
+                                tabSize: editorPrefs.tabSize,
+                                insertSpaces: true,
+                                wordWrap: editorPrefs.wordWrap ? 'on' : 'off',
+                                smoothScrolling: true,
+                                cursorBlinking: 'smooth',
                                 cursorSmoothCaretAnimation: 'on',
                                 padding: { top: 16, bottom: 16 },
                                 scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },

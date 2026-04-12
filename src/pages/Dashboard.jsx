@@ -1,12 +1,37 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import './Dashboard.css';
 import API from '../api.js';
+import { useTheme } from '../context/ThemeContext.jsx';
+
+const ACCENT_PRESETS = [
+    { label: 'Cyan', value: '#00D4FF' },
+    { label: 'Purple', value: '#7B61FF' },
+    { label: 'Green', value: '#00E5A0' },
+    { label: 'Orange', value: '#FF6B35' },
+    { label: 'Pink', value: '#FF3D9A' },
+    { label: 'Gold', value: '#FFBD2E' },
+];
+
+function getEditorPrefs() {
+    try {
+        return JSON.parse(localStorage.getItem('ci-editor-prefs') || '{}');
+    } catch { return {}; }
+}
+
+function getNotifPrefs() {
+    try {
+        return JSON.parse(localStorage.getItem('ci-notifications') || '{}');
+    } catch { return {}; }
+}
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { theme, toggleTheme } = useTheme();
     const username = localStorage.getItem('username') || 'Coder';
+    const role = localStorage.getItem('role') || 'user';
 
     const [tab, setTab] = useState('problems');
     const [filter, setFilter] = useState('All');
@@ -18,6 +43,19 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Settings state
+    const [editorPrefs, setEditorPrefs] = useState(() => ({
+        fontSize: 14, tabSize: 4, lineNumbers: true, wordWrap: true, minimap: false,
+        ...getEditorPrefs(),
+    }));
+    const [notifPrefs, setNotifPrefs] = useState(() => ({
+        emailOnAccepted: true, weeklyReport: false, newProblems: true,
+        ...getNotifPrefs(),
+    }));
+    const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
+    const [pwMsg, setPwMsg] = useState({ text: '', ok: false });
+    const [pwLoading, setPwLoading] = useState(false);
+
     const DC = {
         Easy: { color: '#00E5A0', bg: 'rgba(0,229,160,0.08)', border: 'rgba(0,229,160,0.2)' },
         Medium: { color: '#FFBD2E', bg: 'rgba(255,189,46,0.08)', border: 'rgba(255,189,46,0.2)' },
@@ -28,7 +66,12 @@ export default function Dashboard() {
         fetchProblems();
         fetchUserStats();
         fetchLeaderboard();
-    }, []);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (tab === 'leaderboard') fetchLeaderboard();
+        if (tab === 'analytics') fetchUserStats();
+    }, [tab]);
 
     async function fetchProblems() {
         try {
@@ -70,6 +113,59 @@ export default function Dashboard() {
         }
     }
 
+    function updateEditorPref(key, value) {
+        const next = { ...editorPrefs, [key]: value };
+        setEditorPrefs(next);
+        localStorage.setItem('ci-editor-prefs', JSON.stringify(next));
+    }
+
+    function updateNotifPref(key, value) {
+        const next = { ...notifPrefs, [key]: value };
+        setNotifPrefs(next);
+        localStorage.setItem('ci-notifications', JSON.stringify(next));
+    }
+
+    function setAccentColor(hex) {
+        document.documentElement.style.setProperty('--ci-accent', hex);
+    }
+
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        if (pwForm.next !== pwForm.confirm) {
+            setPwMsg({ text: 'New passwords do not match.', ok: false });
+            return;
+        }
+        if (pwForm.next.length < 6) {
+            setPwMsg({ text: 'Password must be at least 6 characters.', ok: false });
+            return;
+        }
+        setPwLoading(true);
+        setPwMsg({ text: '', ok: false });
+        try {
+            const res = await fetch(`${API}/codeinsight/user/password`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
+            });
+            if (!res.ok) {
+                setPwMsg({ text: 'Endpoint not available yet. Password change will be enabled soon.', ok: false });
+            } else {
+                const data = await res.json();
+                if (data.success) {
+                    setPwMsg({ text: 'Password changed successfully.', ok: true });
+                    setPwForm({ current: '', next: '', confirm: '' });
+                } else {
+                    setPwMsg({ text: data.message || 'Failed to change password.', ok: false });
+                }
+            }
+        } catch {
+            setPwMsg({ text: 'Endpoint not available yet. Password change will be enabled soon.', ok: false });
+        } finally {
+            setPwLoading(false);
+        }
+    }
+
     const filtered = problems.filter(p => {
         const matchDiff = filter === 'All' || p.difficulty === filter;
         const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
@@ -90,7 +186,7 @@ export default function Dashboard() {
             <Navbar />
             <div className="db-layout">
 
-                {/* ── SIDEBAR ── */}
+                
                 <aside className="db-sidebar">
                     <div className="sidebar-profile">
                         <div className="profile-avatar">{username[0].toUpperCase()}</div>
@@ -136,22 +232,23 @@ export default function Dashboard() {
 
                     <nav className="sidebar-nav">
                         {[
-                            { key: 'problems', icon: '🧩', label: 'Problems' },
-                            { key: 'leaderboard', icon: '🏆', label: 'Leaderboard' },
-                            { key: 'analytics', icon: '📊', label: 'Analytics' },
+                            { key: 'problems', label: 'Problems', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> },
+                            { key: 'leaderboard', label: 'Leaderboard', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+                            { key: 'analytics', label: 'Analytics', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
+                            { key: 'settings', label: 'Settings', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
                         ].map(item => (
                             <button
                                 key={item.key}
                                 className={`snav-btn ${tab === item.key ? 'snav-btn--active' : ''}`}
                                 onClick={() => setTab(item.key)}
                             >
-                                <span>{item.icon}</span>{item.label}
+                                {item.svg}{item.label}
                             </button>
                         ))}
                     </nav>
                 </aside>
 
-                {/* ── MAIN ── */}
+                
                 <main className="db-main">
 
                     {/* PROBLEMS TAB */}
@@ -166,7 +263,7 @@ export default function Dashboard() {
 
                             <div className="filter-bar">
                                 <div className="search-wrap">
-                                    <span className="search-icon">🔍</span>
+                                    <span className="search-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                                     <input
                                         className="search-input"
                                         placeholder="Search problems..."
@@ -226,7 +323,7 @@ export default function Dashboard() {
                                                 </span>
                                                 <span className="p-status">
                                                     {isSolved
-                                                        ? <span className="status-solved">✅ Solved</span>
+                                                        ? <span className="status-solved"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Solved</span>
                                                         : <span className="status-todo">— Todo</span>}
                                                 </span>
                                                 <button
@@ -266,7 +363,7 @@ export default function Dashboard() {
                                     {leaderboard.map(u => (
                                         <div key={u.rank} className={`lb-row ${u.isYou ? 'lb-row--you' : ''}`}>
                                             <div className="lb-rank">
-                                                {u.rank <= 3 ? ['🥇', '🥈', '🥉'][u.rank - 1] : `#${u.rank}`}
+                                                {u.rank === 1 ? <span style={{color:'#FFD700',fontWeight:800}}>1st</span> : u.rank === 2 ? <span style={{color:'#C0C0C0',fontWeight:800}}>2nd</span> : u.rank === 3 ? <span style={{color:'#CD7F32',fontWeight:800}}>3rd</span> : `#${u.rank}`}
                                             </div>
                                             <div className="lb-avatar">{u.username[0].toUpperCase()}</div>
                                             <div className="lb-info">
@@ -299,17 +396,17 @@ export default function Dashboard() {
 
                             <div className="analytics-grid">
                                 {[
-                                    { label: 'Total Solved', value: solved, icon: '✅', color: '#00E5A0' },
-                                    { label: 'Global Rank', value: `#${userStats?.rank || '—'}`, icon: '🏆', color: '#00D4FF' },
-                                    { label: 'Acceptance Rate', value: `${userStats?.acceptanceRate || 0}%`, icon: '📈', color: '#7B61FF' },
-                                    { label: 'Submissions', value: userStats?.totalSubmissions || 0, icon: '📨', color: '#00D4FF' },
-                                    { label: 'Easy Solved', value: `${easySolved}/${easyTotal}`, icon: '🟢', color: '#00E5A0' },
-                                    { label: 'Medium Solved', value: `${mediumSolved}/${mediumTotal}`, icon: '🟡', color: '#FFBD2E' },
-                                    { label: 'Hard Solved', value: `${hardSolved}/${hardTotal}`, icon: '🔴', color: '#FF3D9A' },
-                                    { label: 'Total Score', value: userStats?.score || 0, icon: '⭐', color: '#FFBD2E' },
+                                    { label: 'Total Solved', value: solved, color: '#00E5A0', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> },
+                                    { label: 'Global Rank', value: `#${userStats?.rank || '—'}`, color: '#00D4FF', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+                                    { label: 'Acceptance Rate', value: `${userStats?.acceptanceRate || 0}%`, color: '#7B61FF', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
+                                    { label: 'Submissions', value: userStats?.totalSubmissions || 0, color: '#00D4FF', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> },
+                                    { label: 'Easy Solved', value: `${easySolved}/${easyTotal}`, color: '#00E5A0', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+                                    { label: 'Medium Solved', value: `${mediumSolved}/${mediumTotal}`, color: '#FFBD2E', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+                                    { label: 'Hard Solved', value: `${hardSolved}/${hardTotal}`, color: '#FF3D9A', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+                                    { label: 'Total Score', value: userStats?.score || 0, color: '#FFBD2E', svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
                                 ].map(s => (
                                     <div className="an-card" key={s.label}>
-                                        <div className="an-icon" style={{ color: s.color }}>{s.icon}</div>
+                                        <div className="an-icon" style={{ color: s.color }}>{s.svg}</div>
                                         <div className="an-value" style={{ color: s.color }}>{s.value}</div>
                                         <div className="an-label">{s.label}</div>
                                     </div>
@@ -340,6 +437,232 @@ export default function Dashboard() {
                             </div>
                         </div>
                     )}
+                    {/* SETTINGS TAB */}
+                    {tab === 'settings' && (
+                        <div className="animate-fadeIn">
+                            <div className="db-header">
+                                <div>
+                                    <h1 className="db-title">Settings</h1>
+                                    <p className="db-subtitle">Customize your CodeInsight experience</p>
+                                </div>
+                            </div>
+
+                            <div className="settings-sections">
+
+                                {/* Appearance */}
+                                <div className="settings-card">
+                                    <div className="settings-card-title">Appearance</div>
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Theme</span>
+                                            <span className="settings-hint">Switch between dark and light mode</span>
+                                        </div>
+                                        <button
+                                            className="theme-toggle-btn"
+                                            onClick={toggleTheme}
+                                            aria-label="Toggle theme"
+                                        >
+                                            <span className="theme-toggle-icon">{theme === 'dark'
+                                                ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                                                : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                                            }</span>
+                                            <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+                                            <span className="theme-toggle-pill" data-active={theme === 'light'} />
+                                        </button>
+                                    </div>
+                                    <div className="settings-row settings-row--wrap">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Accent Color</span>
+                                            <span className="settings-hint">Changes the primary highlight color</span>
+                                        </div>
+                                        <div className="accent-presets">
+                                            {ACCENT_PRESETS.map(p => (
+                                                <button
+                                                    key={p.value}
+                                                    className="accent-swatch"
+                                                    style={{ background: p.value }}
+                                                    title={p.label}
+                                                    onClick={() => setAccentColor(p.value)}
+                                                    aria-label={`Set accent to ${p.label}`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Editor Preferences */}
+                                <div className="settings-card">
+                                    <div className="settings-card-title">Editor Preferences</div>
+
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Font Size</span>
+                                            <span className="settings-hint">Code editor font size in pixels</span>
+                                        </div>
+                                        <div className="settings-select-group">
+                                            {[12, 14, 16, 18].map(sz => (
+                                                <button
+                                                    key={sz}
+                                                    className={`settings-chip ${editorPrefs.fontSize === sz ? 'settings-chip--active' : ''}`}
+                                                    onClick={() => updateEditorPref('fontSize', sz)}
+                                                >
+                                                    {sz}px
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Tab Size</span>
+                                            <span className="settings-hint">Number of spaces per tab</span>
+                                        </div>
+                                        <div className="settings-select-group">
+                                            {[2, 4].map(sz => (
+                                                <button
+                                                    key={sz}
+                                                    className={`settings-chip ${editorPrefs.tabSize === sz ? 'settings-chip--active' : ''}`}
+                                                    onClick={() => updateEditorPref('tabSize', sz)}
+                                                >
+                                                    {sz} spaces
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Line Numbers</span>
+                                            <span className="settings-hint">Show line numbers in the editor</span>
+                                        </div>
+                                        <button
+                                            className={`toggle-switch ${editorPrefs.lineNumbers ? 'toggle-switch--on' : ''}`}
+                                            onClick={() => updateEditorPref('lineNumbers', !editorPrefs.lineNumbers)}
+                                            aria-label="Toggle line numbers"
+                                        >
+                                            <span className="toggle-thumb" />
+                                        </button>
+                                    </div>
+
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Word Wrap</span>
+                                            <span className="settings-hint">Wrap long lines in the editor</span>
+                                        </div>
+                                        <button
+                                            className={`toggle-switch ${editorPrefs.wordWrap ? 'toggle-switch--on' : ''}`}
+                                            onClick={() => updateEditorPref('wordWrap', !editorPrefs.wordWrap)}
+                                            aria-label="Toggle word wrap"
+                                        >
+                                            <span className="toggle-thumb" />
+                                        </button>
+                                    </div>
+
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Minimap</span>
+                                            <span className="settings-hint">Show code minimap on the right</span>
+                                        </div>
+                                        <button
+                                            className={`toggle-switch ${editorPrefs.minimap ? 'toggle-switch--on' : ''}`}
+                                            onClick={() => updateEditorPref('minimap', !editorPrefs.minimap)}
+                                            aria-label="Toggle minimap"
+                                        >
+                                            <span className="toggle-thumb" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Account Info */}
+                                <div className="settings-card">
+                                    <div className="settings-card-title">Account Info</div>
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Username</span>
+                                        </div>
+                                        <span className="settings-value">{username}</span>
+                                    </div>
+                                    <div className="settings-row">
+                                        <div className="settings-label-group">
+                                            <span className="settings-label">Role</span>
+                                        </div>
+                                        <span className="settings-badge">{role}</span>
+                                    </div>
+
+                                    <div className="settings-divider" />
+                                    <div className="settings-card-subtitle">Change Password</div>
+
+                                    {pwMsg.text && (
+                                        <div className={`settings-msg ${pwMsg.ok ? 'settings-msg--ok' : 'settings-msg--err'}`}>
+                                            {pwMsg.text}
+                                        </div>
+                                    )}
+
+                                    <form className="pw-form" onSubmit={handleChangePassword}>
+                                        <input
+                                            className="settings-input"
+                                            type="password"
+                                            placeholder="Current password"
+                                            value={pwForm.current}
+                                            onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))}
+                                            required
+                                        />
+                                        <input
+                                            className="settings-input"
+                                            type="password"
+                                            placeholder="New password"
+                                            value={pwForm.next}
+                                            onChange={e => setPwForm(f => ({ ...f, next: e.target.value }))}
+                                            required
+                                        />
+                                        <input
+                                            className="settings-input"
+                                            type="password"
+                                            placeholder="Confirm new password"
+                                            value={pwForm.confirm}
+                                            onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))}
+                                            required
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="btn-primary"
+                                            disabled={pwLoading}
+                                            style={{ alignSelf: 'flex-start' }}
+                                        >
+                                            {pwLoading ? 'Saving...' : 'Update Password'}
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {/* Notifications */}
+                                <div className="settings-card">
+                                    <div className="settings-card-title">Notifications</div>
+
+                                    {[
+                                        { key: 'emailOnAccepted', label: 'Email on Accepted', hint: 'Get an email when your submission is accepted' },
+                                        { key: 'weeklyReport', label: 'Weekly Progress Report', hint: 'Receive a weekly summary of your activity' },
+                                        { key: 'newProblems', label: 'New Problem Alerts', hint: 'Be notified when new problems are added' },
+                                    ].map(n => (
+                                        <div className="settings-row" key={n.key}>
+                                            <div className="settings-label-group">
+                                                <span className="settings-label">{n.label}</span>
+                                                <span className="settings-hint">{n.hint}</span>
+                                            </div>
+                                            <button
+                                                className={`toggle-switch ${notifPrefs[n.key] ? 'toggle-switch--on' : ''}`}
+                                                onClick={() => updateNotifPref(n.key, !notifPrefs[n.key])}
+                                                aria-label={`Toggle ${n.label}`}
+                                            >
+                                                <span className="toggle-thumb" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                            </div>
+                        </div>
+                    )}
+
                 </main>
             </div>
         </div>

@@ -34,6 +34,20 @@
     --ease-out: cubic-bezier(0.0, 0, 0.2, 1);
 }
 
+[data-theme="light"] {
+    --ci-bg: #F0F4FF;
+    --ci-surface: #FFFFFF;
+    --ci-surface2: #F5F7FF;
+    --ci-border: #E2E8F0;
+    --ci-border2: #CBD5E0;
+    --ci-text: #0F172A;
+    --ci-text2: #475569;
+    --ci-text3: #94A3B8;
+    --glow-blue: 0 0 40px rgba(0, 212, 255, 0.08);
+    --glow-purple: 0 0 40px rgba(123, 97, 255, 0.08);
+    --glow-green: 0 0 40px rgba(0, 229, 160, 0.08);
+}
+
 *,
 *::before,
 *::after {
