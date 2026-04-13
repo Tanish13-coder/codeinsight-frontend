@@ -239,7 +239,7 @@ const steps = [
     { num: '04', title: 'Get AI Insight', desc: 'Receive instant AI feedback on complexity, style, and optimizations specific to your code.' },
 ];
 
-const testimonials = [
+const FALLBACK_TESTIMONIALS = [
     {
         name: 'Priya Sharma',
         role: 'CS Student, IIT Delhi',
@@ -262,6 +262,8 @@ const testimonials = [
         color: '#00E5A0',
     },
 ];
+
+const REVIEW_COLORS = ['#00D4FF', '#7B61FF', '#00E5A0'];
 
 const compareData = [
     { feature: 'Java-first editor', ci: true, lc: false, hr: true },
@@ -413,6 +415,14 @@ function useReveal() {
 
 export default function Home() {
     useReveal();
+    const [reviews, setReviews] = useState([]);
+
+    useEffect(() => {
+        fetch('/codeinsight/reviews')
+            .then(r => r.json())
+            .then(d => { if (d.success && d.reviews.length > 0) setReviews(d.reviews); })
+            .catch(() => {});
+    }, []);
 
     return (
         <div className="landing">
@@ -649,32 +659,40 @@ export default function Home() {
                         </p>
                     </div>
                     <div className="testimonials-grid">
-                        {testimonials.map((t, i) => (
-                            <div
-                                className="testimonial-card reveal"
-                                key={t.name}
-                                style={{ '--t-accent': t.color, transitionDelay: `${i * 0.1}s` }}
-                            >
-                                <div className="tc-quote">"</div>
-                                <p className="tc-text">{t.text}</p>
-                                <div className="tc-author">
-                                    <div className="tc-avatar" style={{ background: `linear-gradient(135deg, ${t.color}, ${t.color}88)` }}>
-                                        {t.avatar}
-                                    </div>
-                                    <div className="tc-author-info">
-                                        <div className="tc-name">{t.name}</div>
-                                        <div className="tc-role">{t.role}</div>
-                                    </div>
-                                    <div className="tc-stars">
-                                        {[...Array(5)].map((_, i) => (
-                                            <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                            </svg>
-                                        ))}
+                        {(reviews.length > 0 ? reviews : FALLBACK_TESTIMONIALS).map((t, i) => {
+                            const color = REVIEW_COLORS[i % REVIEW_COLORS.length];
+                            const name = reviews.length > 0 ? t.username : t.name;
+                            const avatar = name ? name[0].toUpperCase() : '?';
+                            const role = t.role || '';
+                            const text = reviews.length > 0 ? t.text : t.text;
+                            const rating = reviews.length > 0 ? (t.rating || 5) : 5;
+                            return (
+                                <div
+                                    className="testimonial-card reveal"
+                                    key={reviews.length > 0 ? t.id : t.name}
+                                    style={{ '--t-accent': color, transitionDelay: `${i * 0.1}s` }}
+                                >
+                                    <div className="tc-quote">"</div>
+                                    <p className="tc-text">{text}</p>
+                                    <div className="tc-author">
+                                        <div className="tc-avatar" style={{ background: `linear-gradient(135deg, ${color}, ${color}88)` }}>
+                                            {avatar}
+                                        </div>
+                                        <div className="tc-author-info">
+                                            <div className="tc-name">{name}</div>
+                                            <div className="tc-role">{role}</div>
+                                        </div>
+                                        <div className="tc-stars">
+                                            {[...Array(rating)].map((_, j) => (
+                                                <svg key={j} width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                </svg>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </section>

@@ -56,6 +56,10 @@ export default function Dashboard() {
     const [pwMsg, setPwMsg] = useState({ text: '', ok: false });
     const [pwLoading, setPwLoading] = useState(false);
 
+    const [reviewForm, setReviewForm] = useState({ rating: 5, text: '', role: '' });
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const [reviewMsg, setReviewMsg] = useState({ text: '', ok: false });
+
     const DC = {
         Easy: { color: '#00E5A0', bg: 'rgba(0,229,160,0.08)', border: 'rgba(0,229,160,0.2)' },
         Medium: { color: '#FFBD2E', bg: 'rgba(255,189,46,0.08)', border: 'rgba(255,189,46,0.2)' },
@@ -166,6 +170,35 @@ export default function Dashboard() {
         }
     }
 
+    async function handleReviewSubmit(e) {
+        e.preventDefault();
+        if (!reviewForm.text.trim()) {
+            setReviewMsg({ text: 'Please write your review before submitting.', ok: false });
+            return;
+        }
+        setReviewSubmitting(true);
+        setReviewMsg({ text: '', ok: false });
+        try {
+            const res = await fetch(`${API}/codeinsight/reviews`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reviewForm),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setReviewMsg({ text: data.message || 'Review submitted for approval.', ok: true });
+                setReviewForm({ rating: 5, text: '', role: '' });
+            } else {
+                setReviewMsg({ text: data.message || 'Failed to submit review.', ok: false });
+            }
+        } catch {
+            setReviewMsg({ text: 'Failed to submit review. Please try again.', ok: false });
+        } finally {
+            setReviewSubmitting(false);
+        }
+    }
+
     const filtered = problems.filter(p => {
         const matchDiff = filter === 'All' || p.difficulty === filter;
         const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
@@ -236,6 +269,7 @@ export default function Dashboard() {
                             { key: 'leaderboard', label: 'Leaderboard', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
                             { key: 'analytics', label: 'Analytics', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
                             { key: 'settings', label: 'Settings', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
+                            { key: 'review', label: 'Write Review', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
                         ].map(item => (
                             <button
                                 key={item.key}
@@ -659,6 +693,92 @@ export default function Dashboard() {
                                     ))}
                                 </div>
 
+                            </div>
+                        </div>
+                    )}
+
+                    {/* REVIEW TAB */}
+                    {tab === 'review' && (
+                        <div className="animate-fadeIn">
+                            <div className="db-header">
+                                <div>
+                                    <h1 className="db-title">Share Your Experience</h1>
+                                    <p className="db-subtitle">Tell the community what you think about CodeInsight</p>
+                                </div>
+                            </div>
+
+                            <div className="settings-sections">
+                                <div className="settings-card" style={{ maxWidth: 560 }}>
+                                    {reviewMsg.text && (
+                                        <div className={`settings-msg ${reviewMsg.ok ? 'settings-msg--ok' : 'settings-msg--err'}`}>
+                                            {reviewMsg.text}
+                                        </div>
+                                    )}
+
+                                    <form className="pw-form" onSubmit={handleReviewSubmit}>
+                                        <div className="settings-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                                            <span className="settings-label">Your Rating</span>
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                {[1, 2, 3, 4, 5].map(star => (
+                                                    <button
+                                                        key={star}
+                                                        type="button"
+                                                        onClick={() => setReviewForm(f => ({ ...f, rating: star }))}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            padding: 2,
+                                                            color: star <= reviewForm.rating ? '#FFBD2E' : 'var(--ci-text3)',
+                                                            transition: 'color 0.15s',
+                                                        }}
+                                                        aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                                                    >
+                                                        <svg width="28" height="28" viewBox="0 0 24 24" fill={star <= reviewForm.rating ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                        </svg>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <textarea
+                                            className="settings-input"
+                                            placeholder="Tell others about your experience with CodeInsight..."
+                                            value={reviewForm.text}
+                                            onChange={e => setReviewForm(f => ({ ...f, text: e.target.value }))}
+                                            rows={5}
+                                            maxLength={500}
+                                            style={{ resize: 'vertical', minHeight: 120, fontFamily: 'inherit' }}
+                                            required
+                                        />
+                                        <div style={{ fontSize: 12, color: 'var(--ci-text3)', textAlign: 'right', marginTop: -8 }}>
+                                            {reviewForm.text.length}/500
+                                        </div>
+
+                                        <input
+                                            className="settings-input"
+                                            type="text"
+                                            placeholder="Your Role (e.g. CS Student, SDE Intern at Google...)"
+                                            value={reviewForm.role}
+                                            onChange={e => setReviewForm(f => ({ ...f, role: e.target.value }))}
+                                            maxLength={100}
+                                        />
+
+                                        <button
+                                            type="submit"
+                                            className="btn-primary"
+                                            disabled={reviewSubmitting}
+                                            style={{ alignSelf: 'flex-start' }}
+                                        >
+                                            {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+                                        </button>
+                                    </form>
+
+                                    <p style={{ marginTop: 16, fontSize: 13, color: 'var(--ci-text3)' }}>
+                                        Your review will appear on the homepage after admin approval.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     )}
