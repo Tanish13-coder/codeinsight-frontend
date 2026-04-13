@@ -1,71 +1,154 @@
+/* ============================================================
+   Navbar – Glassmorphism, sticky, responsive
+   ============================================================ */
+
 .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    padding: 16px 0;
-    transition: all 0.3s var(--ease);
+    padding: 14px 0;
+    transition: background 0.35s ease,
+                backdrop-filter 0.35s ease,
+                border-color 0.35s ease,
+                padding 0.3s ease;
+    border-bottom: 1px solid transparent;
 }
 
 .navbar--scrolled {
-    background: rgba(8, 11, 20, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--ci-border);
-    padding: 12px 0;
+    background: rgba(6, 11, 20, 0.85);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+    padding: 10px 0;
+    box-shadow: 0 1px 40px rgba(0, 0, 0, 0.4),
+                0 0 80px rgba(0, 212, 255, 0.03);
 }
 
+/* ── Inner Layout ── */
 .navbar-inner {
     display: flex;
     align-items: center;
     gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
 }
 
-/* Logo */
+/* ── Logo ── */
 .navbar-logo {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     text-decoration: none;
     flex-shrink: 0;
+    transition: opacity 0.2s ease;
+}
+
+.navbar-logo:hover {
+    opacity: 0.9;
 }
 
 .logo-icon {
     font-family: var(--font-code);
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
-    color: var(--ci-accent);
+    /* gradient icon */
+    background: linear-gradient(135deg, #00d4ff, #7b61ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* subtle glow via text-shadow workaround */
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.45));
+    padding: 5px 8px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 6px;
+    background-color: rgba(0, 212, 255, 0.06);
+    /* override gradient background for the container */
+    background-image: linear-gradient(135deg, #00d4ff, #7b61ff);
+}
+
+/* We need to separate the icon text gradient from bg-color, use a span trick */
+.logo-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(123,97,255,0.1));
+    flex-shrink: 0;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.navbar-logo:hover .logo-icon-wrap {
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
+    border-color: rgba(0, 212, 255, 0.4);
+}
+
+.logo-icon-wrap .logo-icon {
+    font-family: var(--font-code);
+    font-size: 14px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00d4ff, #7b61ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    background-image: none;
+    filter: none;
 }
 
 .logo-text {
-    font-family: var(--font-display);
-    font-size: 17px;
-    font-weight: 700;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 800;
     color: var(--ci-text);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
 }
 
 .logo-accent {
-    color: var(--ci-accent);
+    background: linear-gradient(135deg, #00d4ff, #7b61ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-/* Center links */
+/* ── Center Navigation Links ── */
 .navbar-links {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     flex: 1;
 }
 
 .nav-link {
-    padding: 7px 14px;
+    position: relative;
+    padding: 7px 13px;
     font-size: 14px;
     font-weight: 500;
     color: var(--ci-text2);
     border-radius: var(--radius-sm);
-    transition: all 0.2s;
+    transition: color 0.2s ease, background 0.2s ease;
     text-decoration: none;
+    letter-spacing: 0.01em;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #00d4ff, #7b61ff);
+    border-radius: 2px;
+    transition: width 0.25s var(--ease);
 }
 
 .nav-link:hover {
@@ -73,20 +156,52 @@
     background: rgba(255, 255, 255, 0.05);
 }
 
-/* Right actions */
+.nav-link:hover::after,
+.nav-link.active::after {
+    width: calc(100% - 26px);
+}
+
+.nav-link.active {
+    color: var(--ci-accent);
+}
+
+/* ── Right-side Actions ── */
 .navbar-actions {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-left: auto;
+    flex-shrink: 0;
 }
 
-.nav-btn {
-    padding: 8px 20px !important;
-    font-size: 14px !important;
+/* Theme toggle icon button */
+.navbar-theme-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--ci-border2);
+    background: transparent;
+    color: var(--ci-text2);
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease,
+                color 0.2s ease,
+                background 0.2s ease,
+                transform 0.2s ease;
+    flex-shrink: 0;
 }
 
-/* User info */
+.navbar-theme-btn:hover {
+    border-color: var(--ci-accent);
+    color: var(--ci-accent);
+    background: rgba(0, 212, 255, 0.07);
+    transform: rotate(15deg);
+}
+
+/* Logged-in user section */
 .navbar-user {
     display: flex;
     align-items: center;
@@ -94,49 +209,101 @@
 }
 
 .user-avatar {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--ci-accent), var(--ci-accent2));
+    background: linear-gradient(135deg, #00d4ff, #7b61ff);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-display);
+    font-family: var(--font-body);
     font-size: 13px;
     font-weight: 700;
-    color: var(--ci-bg);
+    color: #fff;
     flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.25),
+                0 0 12px rgba(0, 212, 255, 0.2);
+    transition: box-shadow 0.25s ease;
+}
+
+.user-avatar:hover {
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.5),
+                0 0 20px rgba(0, 212, 255, 0.3);
 }
 
 .user-name {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--ci-text);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Hamburger */
+/* Navbar buttons */
+.nav-btn {
+    padding: 8px 18px !important;
+    font-size: 13px !important;
+}
+
+/* Logout specific */
+.nav-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: rgba(255, 61, 154, 0.08);
+    border: 1px solid rgba(255, 61, 154, 0.2);
+    border-radius: var(--radius-md);
+    color: #ff3d9a;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.nav-logout-btn:hover {
+    background: rgba(255, 61, 154, 0.15);
+    border-color: rgba(255, 61, 154, 0.4);
+    transform: translateY(-1px);
+}
+
+/* ── Hamburger Menu ── */
 .hamburger {
     display: none;
     flex-direction: column;
     gap: 5px;
-    padding: 6px;
+    padding: 7px;
     cursor: pointer;
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--ci-border2);
+    border-radius: var(--radius-sm);
+    transition: background 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.hamburger:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .hamburger span {
     display: block;
-    width: 22px;
+    width: 20px;
     height: 2px;
     background: var(--ci-text2);
     border-radius: 2px;
-    transition: all 0.3s var(--ease);
+    transition: transform 0.3s var(--ease),
+                opacity 0.3s ease,
+                background 0.2s ease;
     transform-origin: center;
 }
 
 .hamburger--open span:nth-child(1) {
     transform: translateY(7px) rotate(45deg);
+    background: var(--ci-accent);
 }
 
 .hamburger--open span:nth-child(2) {
@@ -146,10 +313,15 @@
 
 .hamburger--open span:nth-child(3) {
     transform: translateY(-7px) rotate(-45deg);
+    background: var(--ci-accent);
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
+    .navbar-inner {
+        padding: 0 16px;
+    }
+
     .hamburger {
         display: flex;
     }
@@ -165,12 +337,14 @@
         left: 0;
         right: 0;
         flex-direction: column;
-        background: rgba(8, 11, 20, 0.97);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--ci-border);
-        padding: 16px;
-        gap: 4px;
-        align-items: flex-start;
+        align-items: stretch;
+        background: rgba(6, 11, 20, 0.97);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid var(--ci-border2);
+        padding: 12px 16px 16px;
+        gap: 2px;
+        animation: slideUp 0.25s var(--ease);
     }
 
     .navbar-links--open {
@@ -180,5 +354,34 @@
     .nav-link {
         width: 100%;
         padding: 12px 16px;
+        border-radius: var(--radius-md);
+        font-size: 15px;
+    }
+
+    .nav-link::after {
+        display: none;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background: rgba(0, 212, 255, 0.06);
+        color: var(--ci-accent);
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar-actions {
+        gap: 6px;
+    }
+
+    .nav-btn {
+        padding: 7px 12px !important;
+        font-size: 12px !important;
+    }
+
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
     }
 }
