@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import './Editor.css';
 import MonacoEditor from '@monaco-editor/react';
 import API from '../api.js';
+import Logo from '../components/Logo.jsx';
 
 const DEFAULT_TEMPLATE = `import java.util.*;
 
@@ -606,8 +607,7 @@ function EditorNav({ username, role, onLogout }) {
     return (
         <nav className="ed-nav">
             <Link to="/" className="ed-nav-logo">
-                <div className="ed-logo-icon">{'</>'}</div>
-                Code<span>Insight</span>
+                <Logo size="sm" />
             </Link>
             <div className="ed-nav-links">
                 <Link to="/" className="ed-nav-link">Home</Link>

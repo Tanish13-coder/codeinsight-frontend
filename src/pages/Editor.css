@@ -30,24 +30,10 @@
 .ed-nav-logo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     text-decoration: none;
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--ci-text, #e2e8f0);
-    letter-spacing: 0.01em;
-    font-family: 'Space Mono', monospace;
+    transition: opacity 0.2s;
 }
-.ed-nav-logo span { color: var(--ci-accent, #00d4ff); }
-
-.ed-logo-icon {
-    background: linear-gradient(135deg, var(--ci-accent, #00d4ff), var(--ci-accent2, #7b61ff));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 1rem;
-    font-family: 'Space Mono', monospace;
-}
+.ed-nav-logo:hover { opacity: 0.85; }
 
 .ed-nav-links {
     display: flex;

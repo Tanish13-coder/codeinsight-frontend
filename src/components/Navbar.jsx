@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Navbar.css';
 import { useTheme } from '../context/ThemeContext.jsx';
+import Logo from './Logo.jsx';
 
 const SunIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -81,12 +82,7 @@ export default function Navbar() {
 
                 {/* ── Logo ── */}
                 <Link to="/" className="navbar-logo">
-                    <div className="logo-icon-wrap">
-                        <span className="logo-icon">{'</>'}</span>
-                    </div>
-                    <span className="logo-text">
-                        Code<span className="logo-accent">Insight</span>
-                    </span>
+                    <Logo size="sm" />
                 </Link>
 
                 {/* ── Center Nav Links ── */}

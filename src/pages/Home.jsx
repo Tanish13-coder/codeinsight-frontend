@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
+import Logo from '../components/Logo.jsx';
 import './home.css';
 
 /* ─── AI Guide Chatbot ─────────────────────────────────── */
@@ -709,8 +710,7 @@ export default function Home() {
                 <div className="container">
                     <div className="footer-inner">
                         <div className="footer-logo">
-                            <span style={{ color: '#00D4FF', fontWeight: 800 }}>{'</>'}</span>
-                            CodeInsight
+                            <Logo size="sm" />
                         </div>
                         <p className="footer-copy">© 2025 CodeInsight. Built for coders, by coders.</p>
                         <div className="footer-links">
