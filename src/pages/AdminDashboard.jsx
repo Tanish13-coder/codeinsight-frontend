@@ -32,6 +32,8 @@ export default function AdminDashboard() {
     const [tab, setTab] = useState('overview');
     const [problems, setProblems] = useState([]);
     const [submissions, setSubmissions] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -43,12 +45,12 @@ export default function AdminDashboard() {
     useEffect(() => {
         fetchProblems();
         fetchSubmissions();
+        fetchAllReviews();
     }, []);
 
     useEffect(() => {
-        if (tab === 'submissions' || tab === 'overview') {
-            fetchSubmissions();
-        }
+        if (tab === 'submissions' || tab === 'overview') fetchSubmissions();
+        if (tab === 'reviews') fetchAllReviews();
     }, [tab]);
 
     async function fetchProblems() {
@@ -79,6 +81,50 @@ export default function AdminDashboard() {
             else console.error('Submissions fetch failed:', data.message);
         } catch (e) {
             console.error('Failed to load submissions:', e);
+        }
+    }
+
+    async function fetchAllReviews() {
+        setReviewsLoading(true);
+        try {
+            const res = await fetch(`${API}/codeinsight/reviews?all=true`, { credentials: 'include' });
+            const data = await res.json();
+            if (data.success) setReviews(data.reviews);
+        } catch (e) {
+            console.error('Failed to load reviews:', e);
+        } finally {
+            setReviewsLoading(false);
+        }
+    }
+
+    async function handleApproveReview(id) {
+        try {
+            const res = await fetch(`${API}/codeinsight/reviews`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setReviews(prev => prev.map(r => r.id === id ? { ...r, approved: true } : r));
+            }
+        } catch (e) {
+            console.error('Failed to approve review:', e);
+        }
+    }
+
+    async function handleDeleteReview(id) {
+        if (!window.confirm('Delete this review? This cannot be undone.')) return;
+        try {
+            const res = await fetch(`${API}/codeinsight/reviews?id=${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            const data = await res.json();
+            if (data.success) setReviews(prev => prev.filter(r => r.id !== id));
+        } catch (e) {
+            console.error('Failed to delete review:', e);
         }
     }
 
@@ -183,6 +229,7 @@ export default function AdminDashboard() {
                             { key: 'upload', label: 'Upload Problem', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
                             { key: 'problems', label: 'Manage Problems', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> },
                             { key: 'submissions', label: 'Submissions', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> },
+                            { key: 'reviews', label: 'Reviews', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
                             { key: 'settings', label: 'Settings', svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
                         ].map(item => (
                             <button
@@ -528,6 +575,112 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                     )}
+                    {/* REVIEWS TAB */}
+                    {tab === 'reviews' && (
+                        <div className="animate-fadeIn">
+                            <div className="ad-header">
+                                <h1 className="ad-title">User Reviews</h1>
+                                <p className="ad-subtitle">
+                                    {reviews.filter(r => !r.approved).length} pending approval · {reviews.filter(r => r.approved).length} published
+                                </p>
+                            </div>
+
+                            {reviewsLoading ? (
+                                <div style={{ textAlign: 'center', padding: 60, color: 'var(--ci-text2)' }}>Loading reviews...</div>
+                            ) : reviews.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: 60, color: 'var(--ci-text3)' }}>No reviews submitted yet.</div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                    {reviews.map(r => (
+                                        <div key={r.id} style={{
+                                            background: 'var(--ci-surface)',
+                                            border: `1px solid ${r.approved ? 'rgba(0,229,160,0.2)' : 'rgba(255,189,46,0.2)'}`,
+                                            borderRadius: 'var(--radius-md)',
+                                            padding: '18px 20px',
+                                            display: 'flex',
+                                            gap: 16,
+                                            alignItems: 'flex-start',
+                                        }}>
+                                            <div style={{
+                                                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                                                background: 'linear-gradient(135deg, var(--ci-accent), #7B61FF)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: 16, fontWeight: 700, color: '#fff',
+                                            }}>
+                                                {r.username ? r.username[0].toUpperCase() : 'U'}
+                                            </div>
+
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+                                                    <span style={{ fontWeight: 700, color: 'var(--ci-text)', fontSize: 14 }}>{r.username}</span>
+                                                    {r.role && <span style={{ fontSize: 12, color: 'var(--ci-text3)' }}>{r.role}</span>}
+                                                    <div style={{ display: 'flex', gap: 2 }}>
+                                                        {[1,2,3,4,5].map(i => (
+                                                            <svg key={i} width="12" height="12" viewBox="0 0 24 24"
+                                                                fill={i <= r.rating ? '#FFBD2E' : 'none'}
+                                                                stroke="#FFBD2E" strokeWidth="2"
+                                                                strokeLinecap="round" strokeLinejoin="round">
+                                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                                            </svg>
+                                                        ))}
+                                                    </div>
+                                                    <span style={{
+                                                        fontSize: 11, fontWeight: 600, padding: '2px 8px',
+                                                        borderRadius: 99,
+                                                        background: r.approved ? 'rgba(0,229,160,0.1)' : 'rgba(255,189,46,0.1)',
+                                                        color: r.approved ? '#00E5A0' : '#FFBD2E',
+                                                        border: `1px solid ${r.approved ? 'rgba(0,229,160,0.25)' : 'rgba(255,189,46,0.25)'}`,
+                                                    }}>
+                                                        {r.approved ? 'Published' : 'Pending'}
+                                                    </span>
+                                                </div>
+
+                                                <p style={{ fontSize: 13.5, color: 'var(--ci-text2)', lineHeight: 1.65, margin: '6px 0 0' }}>
+                                                    {r.text}
+                                                </p>
+
+                                                {r.created_at && (
+                                                    <div style={{ fontSize: 11, color: 'var(--ci-text3)', marginTop: 8 }}>
+                                                        {new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                                                {!r.approved && (
+                                                    <button
+                                                        onClick={() => handleApproveReview(r.id)}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', gap: 6,
+                                                            padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(0,229,160,0.3)',
+                                                            background: 'rgba(0,229,160,0.08)', color: '#00E5A0',
+                                                            fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                                                        }}
+                                                    >
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                                        Approve
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleDeleteReview(r.id)}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: 6,
+                                                        padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,61,154,0.25)',
+                                                        background: 'rgba(255,61,154,0.06)', color: '#FF3D9A',
+                                                        fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                                                    }}
+                                                >
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* ADMIN SETTINGS TAB */}
                     {tab === 'settings' && (
                         <div className="animate-fadeIn">
