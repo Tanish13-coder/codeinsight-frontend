@@ -52,11 +52,16 @@ export default function Editor() {
     const [submitResult, setSubmitResult] = useState(null); // { verdict, passed, total, runtime, output }
     const [rightTab, setRightTab] = useState('output');
 
-    // AI
+    // AI Insight
     const [aiLoading, setAiLoading] = useState(false);
     const [aiData, setAiData] = useState(null);
     const [aiError, setAiError] = useState('');
     const [aiTab, setAiTab] = useState('explain');
+
+    // AI Optimize
+    const [optLoading, setOptLoading] = useState(false);
+    const [optData, setOptData] = useState(null);
+    const [optError, setOptError] = useState('');
 
     useEffect(() => {
         async function load() {
@@ -163,6 +168,36 @@ export default function Editor() {
         } finally { setAiLoading(false); }
     }, [code, problem, runResult, submitResult, aiLoading]);
 
+    /* ── AI Optimize ── */
+    const handleOptimize = useCallback(async () => {
+        if (!code.trim() || optLoading) return;
+        setOptLoading(true);
+        setRightTab('optimize');
+        setOptData(null);
+        setOptError('');
+        try {
+            const res = await fetch(`${API}/codeinsight/ai-optimize`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language: 'Java' }),
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                let msg = `Service error ${res.status}`;
+                try { msg = JSON.parse(text).message || msg; } catch {}
+                throw new Error(msg);
+            }
+            const d = await res.json();
+            if (d.success) {
+                setOptData(d);
+            } else {
+                setOptError(d.message || 'Optimization service unavailable.');
+            }
+        } catch (e) {
+            setOptError(e.message || 'Could not reach optimization service. Make sure the Python service is running.');
+        } finally { setOptLoading(false); }
+    }, [code, optLoading]);
+
     /* ── Keyboard shortcuts ── */
     useEffect(() => {
         function onKey(e) {
@@ -225,6 +260,9 @@ export default function Editor() {
                     </button>
                     <button className={`ed-btn ed-btn--ai ${aiLoading ? 'ed-btn--loading' : ''}`} onClick={handleAI} disabled={aiLoading} title="Get AI analysis, error fix, complexity">
                         {aiLoading ? <><Spinner /> Analyzing...</> : <><AIIcon /> AI Insight</>}
+                    </button>
+                    <button className={`ed-btn ed-btn--optimize ${optLoading ? 'ed-btn--loading' : ''}`} onClick={handleOptimize} disabled={optLoading} title="Deep code optimization by AI Senior Architect">
+                        {optLoading ? <><Spinner /> Optimizing...</> : <><OptimizeIcon /> Optimize</>}
                     </button>
                 </div>
             </div>
@@ -367,6 +405,10 @@ export default function Editor() {
                         <button className={`ed-tab ${rightTab === 'ai' ? 'ed-tab--active' : ''}`} onClick={() => setRightTab('ai')}>
                             AI Insight
                             {aiData && <span className="ed-tab-dot ed-tab-dot--ai" />}
+                        </button>
+                        <button className={`ed-tab ${rightTab === 'optimize' ? 'ed-tab--active' : ''}`} onClick={() => setRightTab('optimize')}>
+                            Optimize
+                            {optData && <span className="ed-tab-dot ed-tab-dot--ai" />}
                         </button>
                     </div>
 
@@ -595,6 +637,129 @@ export default function Editor() {
                                 )}
                             </div>
                         )}
+                        {/* OPTIMIZE PANEL */}
+                        {rightTab === 'optimize' && (
+                            <div className="ai-wrap animate-fadeIn">
+
+                                {!optData && !optLoading && !optError && (
+                                    <div className="ai-empty">
+                                        <div className="ai-empty-glow" />
+                                        <div className="ai-empty-icon">
+                                            <OptimizeIcon size={28} />
+                                        </div>
+                                        <h3>Senior Architect Analysis</h3>
+                                        <p>Powered by <strong>Gemini 2.5 Flash</strong> — get a deep architectural review:</p>
+                                        <ul className="ai-feature-list">
+                                            <li>Time &amp; space complexity breakdown</li>
+                                            <li>Logic faults and anti-patterns</li>
+                                            <li>Detailed improvement explanation</li>
+                                            <li>Corrected &amp; refactored code</li>
+                                        </ul>
+                                        <button className="ai-empty-btn" onClick={handleOptimize}>
+                                            <OptimizeIcon /> Optimize My Code
+                                        </button>
+                                        <p style={{ fontSize: 11, color: 'var(--ci-text3)', marginTop: 12 }}>
+                                            Requires Python optimization service running on port 8000
+                                        </p>
+                                    </div>
+                                )}
+
+                                {optError && (
+                                    <div className="ai-error-box">
+                                        <div className="ai-error-title">Optimization Service Unavailable</div>
+                                        <p>{optError}</p>
+                                        <div className="ai-error-hint">
+                                            Start the Python service:<br />
+                                            <code style={{ fontSize: 11, background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: 4 }}>
+                                                cd Code-Optimization-using-AI &amp;&amp; uvicorn main:app --reload
+                                            </code>
+                                        </div>
+                                        <button className="ai-retry-btn" onClick={handleOptimize}>Retry</button>
+                                    </div>
+                                )}
+
+                                {optLoading && (
+                                    <div className="ai-loading">
+                                        <div className="ai-loading-ring" />
+                                        <h3>Senior Architect reviewing...</h3>
+                                        <p>Dry-running, checking faults, calculating complexity</p>
+                                    </div>
+                                )}
+
+                                {optData && !optLoading && (
+                                    <div className="ai-result animate-fadeIn">
+                                        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                                            <div className="ai-complex-card ai-complex-card--time" style={{ flex: 1 }}>
+                                                <div className="ai-complex-label">Time</div>
+                                                <div className="ai-complex-val">{optData.time_complexity || 'O(?)'}</div>
+                                            </div>
+                                            <div className="ai-complex-card ai-complex-card--space" style={{ flex: 1 }}>
+                                                <div className="ai-complex-label">Space</div>
+                                                <div className="ai-complex-val">{optData.space_complexity || 'O(?)'}</div>
+                                            </div>
+                                        </div>
+
+                                        {optData.logic_faults && optData.logic_faults.length > 0 && (
+                                            <div className="ai-section">
+                                                <div className="ai-section-head" style={{ '--c': '#ef4444' }}>
+                                                    <span>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                    </span>
+                                                    <h4>Logic Faults</h4>
+                                                </div>
+                                                <div className="ai-tips">
+                                                    {optData.logic_faults.map((fault, i) => (
+                                                        <div key={i} className="ai-tip">
+                                                            <div className="ai-tip-num" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>{i + 1}</div>
+                                                            <span>{fault}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {optData.improvement_explanation && (
+                                            <div className="ai-section">
+                                                <div className="ai-section-head" style={{ '--c': '#10b981' }}>
+                                                    <span>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                                    </span>
+                                                    <h4>Improvement Explanation</h4>
+                                                </div>
+                                                <p className="ai-text">{optData.improvement_explanation}</p>
+                                            </div>
+                                        )}
+
+                                        {optData.corrected_code && (
+                                            <div className="ai-section">
+                                                <div className="ai-section-head" style={{ '--c': '#8b5cf6' }}>
+                                                    <span>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                                                    </span>
+                                                    <h4>Corrected &amp; Optimized Code</h4>
+                                                </div>
+                                                <div className="ai-code-wrap">
+                                                    <div className="ai-code-head">
+                                                        <span>Solution.java (refactored)</span>
+                                                        <div className="ai-code-actions">
+                                                            <button onClick={() => navigator.clipboard.writeText(optData.corrected_code)} className="ai-btn-copy">Copy</button>
+                                                            <button onClick={() => { if (window.confirm('Replace your code with the optimized version?')) setCode(optData.corrected_code); }} className="ai-btn-use">Use This</button>
+                                                        </div>
+                                                    </div>
+                                                    <pre className="ai-code-pre">{optData.corrected_code}</pre>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="ai-footer">
+                                            <span>Gemini 2.5 Flash · Senior Architect Mode</span>
+                                            <button className="ai-reanalyze" onClick={handleOptimize} disabled={optLoading}>Re-analyze</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </div>
@@ -628,3 +793,4 @@ const PlayIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="cur
 const CheckIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>;
 const AIIcon = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10" /><path d="M22 2l-5 5" /><path d="M17 2h5v5" /></svg>;
 const CodeIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>;
+const OptimizeIcon = ({ size = 13 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>;
