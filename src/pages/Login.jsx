@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = '';
 
 export default function Login() {
     const [form, setForm] = useState({ username: '', password: '' });
@@ -28,7 +28,7 @@ export default function Login() {
         setError('');
 
         try {
-            const res = await fetch(`${API_BASE}/codeinsight/Login`, {
+            const res = await fetch(`${API_BASE}/codeinsight/login`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
