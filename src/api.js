@@ -1,4 +1,2 @@
-const API = '';
-export default API;// ── Backend base URL ──
-// Change port if your Tomcat runs on a different port
-
+const API = 'http://localhost:8080';
+export default API;
