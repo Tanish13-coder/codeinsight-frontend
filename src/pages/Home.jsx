@@ -3,6 +3,162 @@ import { useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
 import './home.css';
 
+/* ─── AI Guide Chatbot ─────────────────────────────────── */
+const GUIDE_QA = [
+    {
+        q: "What is CodeInsight?",
+        a: "CodeInsight is a free online coding practice platform — like LeetCode but with AI superpowers! You write Java code, run it against test cases, and get instant AI feedback on your code quality, errors, and performance.",
+    },
+    {
+        q: "Do I need to know coding to start?",
+        a: "You don't need to be an expert! Start with Easy problems. The AI Insight button will explain your code in plain English — no jargon. Think of it as a friendly tutor that's available 24/7.",
+    },
+    {
+        q: "How do I solve a problem?",
+        a: "1️⃣ Go to Dashboard → click any problem\n2️⃣ Read the problem description on the left\n3️⃣ Write your Java code in the editor (middle)\n4️⃣ Click Run to test with your own input\n5️⃣ Click Submit to check against all test cases\n6️⃣ Click AI Insight for feedback and tips!",
+    },
+    {
+        q: "What does 'Accepted' mean?",
+        a: "'Accepted' means your code passed all the test cases — great job! 🎉 You earn 100 points added to the leaderboard. If you get 'Wrong Answer' or an error, click AI Insight — it will explain exactly what went wrong and how to fix it.",
+    },
+    {
+        q: "What is AI Insight?",
+        a: "AI Insight is the magic button ✨ It uses Google's Gemini AI to:\n• Explain what your code does in simple English\n• Tell you WHY an error happened and how to fix it\n• Show Time & Space complexity (how fast/efficient your code is)\n• Give 3 tips to improve your code\n• Show you an optimized version of your code",
+    },
+    {
+        q: "What is Time Complexity?",
+        a: "Time complexity tells you how fast your code runs as input gets bigger. O(n) means if you double the input size, the time doubles. O(n²) means it gets 4x slower. The AI Insight panel explains this in plain English with real-life examples — like comparing a search to looking through a notebook vs a dictionary.",
+    },
+    {
+        q: "How does the Leaderboard work?",
+        a: "Every time you solve a problem for the first time (Accepted verdict), you earn 100 points! The leaderboard on the Dashboard shows who has solved the most problems and earned the most points. Compete with friends!",
+    },
+    {
+        q: "I got a Runtime Error. What do I do?",
+        a: "Don't panic! Click the AI Insight button — it will tell you exactly why the error happened (like dividing by zero, or accessing an array out of bounds) in simple words. It also gives you the fixed code!",
+    },
+    {
+        q: "How do I register?",
+        a: "Click 'Start Coding Free' at the top of this page → fill in your username, email and password → done! It's completely free, no credit card needed.",
+    },
+    {
+        q: "What language is supported?",
+        a: "Currently Java (Java 17) is supported for code execution. The editor has full syntax highlighting, auto-complete, and bracket matching — just like a professional IDE!",
+    },
+];
+
+function AIGuide() {
+    const [open, setOpen] = useState(false);
+    const [messages, setMessages] = useState([
+        { from: 'bot', text: "Hi! 👋 I'm your CodeInsight Guide. I'm here to help you understand how this platform works — no technical knowledge needed!\n\nAsk me anything or pick a question below:" }
+    ]);
+    const [input, setInput] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(true);
+    const bottomRef = useRef(null);
+
+    useEffect(() => {
+        if (open && bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, open]);
+
+    function sendMessage(text) {
+        if (!text.trim()) return;
+        const userMsg = { from: 'user', text: text.trim() };
+        setShowSuggestions(false);
+
+        // Find best match
+        const lower = text.toLowerCase();
+        const match = GUIDE_QA.find(qa =>
+            qa.q.toLowerCase().includes(lower) ||
+            lower.includes(qa.q.toLowerCase().split(' ').slice(1, 4).join(' ').toLowerCase()) ||
+            qa.a.toLowerCase().includes(lower.split(' ').slice(0, 3).join(' '))
+        );
+
+        const botText = match
+            ? match.a
+            : "I'm not sure about that one! Here's what I can help with — try picking one of the questions below, or ask something like 'How do I start?' or 'What is AI Insight?'";
+
+        setMessages(prev => [...prev, userMsg, { from: 'bot', text: botText }]);
+        setInput('');
+
+        // Show suggestions again after a short delay
+        setTimeout(() => setShowSuggestions(true), 300);
+    }
+
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage(input);
+        }
+    }
+
+    return (
+        <>
+            {/* Floating button */}
+            <button className={`guide-fab${open ? ' guide-fab--open' : ''}`} onClick={() => setOpen(o => !o)} aria-label="Open AI Guide">
+                {open
+                    ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M22 2l-5 5"/><path d="M17 2h5v5"/></svg>
+                }
+                {!open && <span className="guide-fab-label">Ask AI Guide</span>}
+            </button>
+
+            {/* Chat window */}
+            {open && (
+                <div className="guide-window animate-slideUp">
+                    <div className="guide-header">
+                        <div className="guide-header-avatar">✦</div>
+                        <div>
+                            <div className="guide-header-title">CodeInsight Guide</div>
+                            <div className="guide-header-sub">AI assistant for new users</div>
+                        </div>
+                        <button className="guide-close" onClick={() => setOpen(false)}>✕</button>
+                    </div>
+
+                    <div className="guide-messages">
+                        {messages.map((m, i) => (
+                            <div key={i} className={`guide-msg guide-msg--${m.from}`}>
+                                {m.from === 'bot' && <div className="guide-bot-icon">✦</div>}
+                                <div className={`guide-bubble guide-bubble--${m.from}`}>
+                                    {m.text.split('\n').map((line, j) => (
+                                        <span key={j}>{line}{j < m.text.split('\n').length - 1 && <br />}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+
+                        {showSuggestions && (
+                            <div className="guide-suggestions">
+                                <div className="guide-suggestions-label">Quick questions:</div>
+                                {GUIDE_QA.slice(0, 5).map((qa, i) => (
+                                    <button key={i} className="guide-suggestion-btn" onClick={() => sendMessage(qa.q)}>
+                                        {qa.q}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <div ref={bottomRef} />
+                    </div>
+
+                    <div className="guide-input-row">
+                        <input
+                            className="guide-input"
+                            value={input}
+                            onChange={e => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Ask anything about CodeInsight..."
+                        />
+                        <button className="guide-send-btn" onClick={() => sendMessage(input)} disabled={!input.trim()}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
 const featureIcons = {
     Editor: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -548,7 +704,7 @@ export default function Home() {
                 </div>
             </section>
 
-            
+
             <footer className="footer">
                 <div className="container">
                     <div className="footer-inner">
@@ -565,6 +721,9 @@ export default function Home() {
                     </div>
                 </div>
             </footer>
+
+            {/* AI Guide Chatbot — floats on all pages */}
+            <AIGuide />
         </div>
     );
 }

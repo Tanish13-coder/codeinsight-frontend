@@ -299,6 +299,21 @@ export default function AdminDashboard() {
                                 <p className="ad-subtitle">Add a new problem to the platform</p>
                             </div>
 
+                            <div style={{
+                                margin: '0 0 20px', padding: '14px 18px',
+                                background: 'rgba(0,229,160,0.06)',
+                                border: '1px solid rgba(0,229,160,0.2)',
+                                borderRadius: 'var(--radius-md)',
+                                fontSize: 13, color: '#94a3b8', lineHeight: 1.6,
+                            }}>
+                                <strong style={{ color: '#00E5A0' }}>💡 Easy Starter Tip:</strong>{' '}
+                                To give new users a quick win, upload an easy "Hello World" problem.
+                                Title: <em>Hello World</em> · Difficulty: <em>Easy</em> ·
+                                Description: <em>Print exactly "Hello World" to the output.</em> ·
+                                Test Case: <code style={{ color: '#a5b4fc', fontFamily: 'monospace' }}>{"(empty input) → Hello World"}</code>.
+                                Users just need to write <code style={{ color: '#a5b4fc', fontFamily: 'monospace' }}>System.out.println("Hello World");</code>
+                            </div>
+
                             {saved && (
                                 <div className="ad-success">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
