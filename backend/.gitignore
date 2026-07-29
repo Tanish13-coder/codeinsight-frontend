@@ -1,0 +1,10 @@
+﻿target/
+*.class
+*.log
+*.tmp
+
+ai-service.zip
+temp.txt
+test2.txt
+
+lib/

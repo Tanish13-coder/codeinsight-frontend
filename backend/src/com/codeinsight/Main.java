@@ -1,0 +1,104 @@
+package com.codeinsight;
+
+import org.apache.catalina.Context;
+import org.apache.catalina.startup.Tomcat;
+import org.apache.tomcat.util.descriptor.web.FilterDef;
+import org.apache.tomcat.util.descriptor.web.FilterMap;
+
+import com.codeinsight.servlet.*;
+import com.codeinsight.servlet.RunServlet;
+import com.codeinsight.filter.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+
+public class Main {
+
+    private static int resolvePort(String preferredPort) throws IOException {
+        int port = Integer.parseInt(preferredPort);
+        for (int attempt = 0; attempt < 15; attempt++) {
+            try (ServerSocket socket = new ServerSocket()) {
+                socket.setReuseAddress(true);
+                socket.bind(new InetSocketAddress(port));
+                return port;
+            } catch (IOException ex) {
+                if (attempt == 14) {
+                    throw ex;
+                }
+                port++;
+            }
+        }
+        throw new IOException("Unable to find an available port");
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        int port = resolvePort(System.getenv().getOrDefault("PORT", "8080"));
+
+        Tomcat tomcat = new Tomcat();
+        tomcat.setPort(port);
+        tomcat.setBaseDir(System.getProperty("java.io.tmpdir"));
+
+        String webappDir = System.getProperty("java.io.tmpdir");
+        Context ctx = tomcat.addContext("/codeinsight", webappDir);
+
+        // ✅ FIX: was "/login" (lowercase) — React calls "/Login"
+        Tomcat.addServlet(ctx, "LoginServlet", new LoginServlet());
+        ctx.addServletMappingDecoded("/Login", "LoginServlet");
+        ctx.addServletMappingDecoded("/login", "LoginServlet");
+
+        Tomcat.addServlet(ctx, "RegisterServlet", new RegisterServlet());
+        ctx.addServletMappingDecoded("/register", "RegisterServlet");
+        ctx.addServletMappingDecoded("/Register", "RegisterServlet");
+
+        Tomcat.addServlet(ctx, "ProblemsServlet", new ProblemsServlet());
+        ctx.addServletMappingDecoded("/problems", "ProblemsServlet");
+
+        Tomcat.addServlet(ctx, "SubmitServlet", new SubmitServlet());
+        ctx.addServletMappingDecoded("/submit", "SubmitServlet");
+
+        Tomcat.addServlet(ctx, "RunServlet", new RunServlet());
+        ctx.addServletMappingDecoded("/run", "RunServlet");
+
+        Tomcat.addServlet(ctx, "LeaderboardServlet", new LeaderboardServlet());
+        ctx.addServletMappingDecoded("/leaderboard", "LeaderboardServlet");
+
+        Tomcat.addServlet(ctx, "UserServlet", new UserServlet());
+        ctx.addServletMappingDecoded("/user", "UserServlet");
+
+        Tomcat.addServlet(ctx, "AIInsightServlet", new AIInsightServlet());
+        ctx.addServletMappingDecoded("/ai-insight", "AIInsightServlet");
+
+        Tomcat.addServlet(ctx, "ReviewServlet", new ReviewServlet());
+        ctx.addServletMappingDecoded("/reviews", "ReviewServlet");
+
+        Tomcat.addServlet(ctx, "AIOptimizeServlet", new AIOptimizeServlet());
+        ctx.addServletMappingDecoded("/ai-optimize", "AIOptimizeServlet");
+
+        FilterDef corsFilter = new FilterDef();
+        corsFilter.setFilterName("CORSFilter");
+        corsFilter.setFilter(new CORSFilter());
+        ctx.addFilterDef(corsFilter);
+        FilterMap corsMap = new FilterMap();
+        corsMap.setFilterName("CORSFilter");
+        corsMap.addURLPattern("/*");
+        ctx.addFilterMap(corsMap);
+
+        // Encoding Filter
+        FilterDef encFilter = new FilterDef();
+        encFilter.setFilterName("EncodingFilter");
+        encFilter.setFilter(new EncodingFilter());
+        ctx.addFilterDef(encFilter);
+        FilterMap encMap = new FilterMap();
+        encMap.setFilterName("EncodingFilter");
+        encMap.addURLPattern("/*");
+        ctx.addFilterMap(encMap);
+
+        tomcat.getConnector();
+        tomcat.start();
+        System.out.println("CodeInsight running on port " + port);
+        tomcat.getServer().await();
+    }
+}

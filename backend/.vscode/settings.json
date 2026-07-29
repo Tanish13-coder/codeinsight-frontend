@@ -1,0 +1,9 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/jakarta.servlet-api-6.0.0.jar",
+        "lib/json-20240303.jar",
+        "C:/Program Files/Apache Software Foundation/Tomcat 10.1/lib/servlet-api.jar",
+        "C:/Program Files/Apache Software Foundation/Tomcat 10.1/lib/catalina.jar",
+        "C:/Program Files/Apache Software Foundation/Tomcat 10.1/lib/catalina-ha.jar"
+    ]
+}
