@@ -68,7 +68,16 @@ export default function Editor() {
             try {
                 const res = await fetch(`${API}/codeinsight/problems?id=${id}`, { credentials: 'include' });
                 const data = await res.json();
-                setProblem(data.id ? data : null);
+                const candidate = data?.problem || data?.problems?.[0] || data;
+                const normalized = candidate && typeof candidate === 'object'
+                    ? {
+                        ...candidate,
+                        tags: Array.isArray(candidate.tags)
+                            ? candidate.tags.join(',')
+                            : (typeof candidate.tags === 'string' ? candidate.tags : ''),
+                    }
+                    : null;
+                setProblem(normalized);
             } catch { setProblem(null); }
             finally { setLoading(false); }
         }
@@ -161,10 +170,10 @@ export default function Editor() {
                 // Auto-show error tab if there's an error
                 if (d.errorAnalysis && !d.errorAnalysis.includes('No errors')) setAiTab('error');
             } else {
-                setAiError(d.message || 'AI service unavailable. Please check GEMINI_API_KEY is set.');
+                setAiError(d.message || 'AI service unavailable. Make sure the local AI service is running.');
             }
         } catch (e) {
-            setAiError(`AI service error: ${e.message || 'Could not reach AI service. Make sure backend is running.'}`);
+            setAiError(`AI service error: ${e.message || 'Could not reach AI service. Make sure the backend and local AI service are running.'}`);
         } finally { setAiLoading(false); }
     }, [code, problem, runResult, submitResult, aiLoading]);
 
@@ -498,7 +507,7 @@ export default function Editor() {
                                     <div className="ai-error-box">
                                         <div className="ai-error-title">⚠ AI Service Error</div>
                                         <p>{aiError}</p>
-                                        <div className="ai-error-hint">Make sure: 1) Backend is running 2) GEMINI_API_KEY is set in env</div>
+                                        <div className="ai-error-hint">Make sure: 1) Backend is running 2) The local AI service is running on port 8001</div>
                                         <button className="ai-retry-btn" onClick={handleAI}>Retry</button>
                                     </div>
                                 )}
@@ -630,7 +639,7 @@ export default function Editor() {
                                         </div>
 
                                         <div className="ai-footer">
-                                            <span>Results from Google Gemini AI</span>
+                                            <span>Results from the local AI service</span>
                                             <button className="ai-reanalyze" onClick={handleAI} disabled={aiLoading}>Re-analyze</button>
                                         </div>
                                     </div>

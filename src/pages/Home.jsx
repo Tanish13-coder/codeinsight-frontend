@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Logo from '../components/Logo.jsx';
+import Login from './Login';
+import Register from './Register';
 import './home.css';
 
 /* ─── AI Guide Chatbot ─────────────────────────────────── */
@@ -416,6 +418,8 @@ function useReveal() {
 export default function Home() {
     useReveal();
     const [reviews, setReviews] = useState([]);
+    const [authModal, setAuthModal] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch('/codeinsight/reviews')
@@ -424,9 +428,39 @@ export default function Home() {
             .catch(() => {});
     }, []);
 
+    useEffect(() => {
+        if (!authModal) {
+            document.body.style.overflow = '';
+            return;
+        }
+
+        document.body.style.overflow = 'hidden';
+        const onKeyDown = (event) => {
+            if (event.key === 'Escape') setAuthModal(null);
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => {
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    }, [authModal]);
+
+    function openAuthModal(mode) {
+        setAuthModal(mode);
+    }
+
+    function closeAuthModal() {
+        setAuthModal(null);
+    }
+
+    function handleAuthSuccess(route = '/') {
+        closeAuthModal();
+        navigate(route);
+    }
+
     return (
         <div className="landing">
-            <Navbar />
+            <Navbar onOpenAuth={openAuthModal} />
 
             
             <section className="hero">
@@ -451,12 +485,8 @@ export default function Home() {
                                 CodeInsight combines a professional Java editor, intelligent AI feedback, and real-time leaderboards — the next evolution beyond LeetCode.
                             </p>
                             <div className="hero-actions animate-fadeUp delay-3">
-                                <Link to="/register">
-                                    <button className="btn-primary btn-lg">Start Coding Free →</button>
-                                </Link>
-                                <Link to="/login">
-                                    <button className="btn-ghost btn-lg">Sign In</button>
-                                </Link>
+                                <button className="btn-primary btn-lg" onClick={() => openAuthModal('register')}>Start Coding Free →</button>
+                                <button className="btn-ghost btn-lg" onClick={() => openAuthModal('login')}>Sign In</button>
                             </div>
                             <div className="hero-badges animate-fadeUp delay-4">
                                 <span className="badge">
@@ -712,12 +742,8 @@ export default function Home() {
                             Join thousands of developers who use CodeInsight to sharpen their skills with real AI feedback.
                         </p>
                         <div className="hero-actions">
-                            <Link to="/register">
-                                <button className="btn-primary btn-lg">Create Free Account →</button>
-                            </Link>
-                            <Link to="/login">
-                                <button className="btn-ghost btn-lg">Sign In</button>
-                            </Link>
+                            <button className="btn-primary btn-lg" onClick={() => openAuthModal('register')}>Create Free Account →</button>
+                            <button className="btn-ghost btn-lg" onClick={() => openAuthModal('login')}>Sign In</button>
                         </div>
                     </div>
                 </div>
@@ -739,6 +765,29 @@ export default function Home() {
                     </div>
                 </div>
             </footer>
+
+            {authModal && (
+                <div className="auth-modal-backdrop" onClick={closeAuthModal}>
+                    <div className="auth-modal-shell" onClick={event => event.stopPropagation()}>
+                        <button className="auth-modal-close" onClick={closeAuthModal} aria-label="Close auth dialog">✕</button>
+                        {authModal === 'login' ? (
+                            <Login
+                                compact
+                                onClose={closeAuthModal}
+                                onSwitchMode={() => setAuthModal('register')}
+                                onSuccess={(role) => handleAuthSuccess(role === 'admin' ? '/admin' : '/dashboard')}
+                            />
+                        ) : (
+                            <Register
+                                compact
+                                onClose={closeAuthModal}
+                                onSwitchMode={() => setAuthModal('login')}
+                                onSuccess={() => handleAuthSuccess('/')}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* AI Guide Chatbot — floats on all pages */}
             <AIGuide />

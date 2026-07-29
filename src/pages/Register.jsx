@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
-export default function Register() {
+export default function Register({ compact = false, onClose, onSwitchMode, onSuccess }) {
     const [form, setForm] = useState({
         username: '',
         email: '',
@@ -65,8 +65,14 @@ export default function Register() {
 
             const data = await res.json();
             if (data.success) {
-                setSuccess('Account created! Redirecting to login...');
-                setTimeout(() => navigate('/login'), 1800);
+                setSuccess('Account created! You can sign in now.');
+                setTimeout(() => {
+                    if (onSuccess) {
+                        onSuccess();
+                    } else {
+                        navigate('/login');
+                    }
+                }, 1800);
             } else {
                 setError(data.message || 'Registration failed. Please try again.');
             }
@@ -118,6 +124,12 @@ export default function Register() {
                     position: relative;
                     overflow: hidden;
                 }
+                .rg-page--compact {
+                    min-height: auto;
+                    padding: 0;
+                    background: transparent;
+                    overflow: visible;
+                }
 
                 /* Background effects */
                 .rg-bg-grid {
@@ -152,6 +164,18 @@ export default function Register() {
                     padding: 40px 36px;
                     backdrop-filter: blur(20px);
                     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+                }
+                .rg-card--compact {
+                    max-width: 100%;
+                    padding: 30px 24px;
+                    border: 1px solid rgba(255,255,255,0.12);
+                    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+                }
+                .rg-card--compact .rg-title {
+                    font-size: 24px;
+                }
+                .rg-card--compact .rg-subtitle {
+                    margin-bottom: 20px;
                 }
                 @keyframes slideUp {
                     from { opacity: 0; transform: translateY(30px); }
@@ -373,12 +397,16 @@ export default function Register() {
                 }
             `}</style>
 
-            <div className="rg-page">
+            <div className={`rg-page ${compact ? 'rg-page--compact' : ''}`}>
                 <div className="rg-bg-grid" />
                 <div className="rg-orb1" />
                 <div className="rg-orb2" />
 
-                <div className="rg-card">
+                <div className={`rg-card ${compact ? 'rg-card--compact' : ''}`}>
+                    {compact && onClose && (
+                        <button type="button" className="auth-modal-close" onClick={onClose} aria-label="Close sign up dialog">✕</button>
+                    )}
+
                     {/* Logo */}
                     <Link to="/" className="rg-logo">
                         <div className="rg-logo-icon">{'</>'}</div>
@@ -605,7 +633,11 @@ export default function Register() {
                     </div>
 
                     <div className="rg-footer">
-                        <p>Already have an account? <Link to="/login">Sign in</Link></p>
+                        {compact && onSwitchMode ? (
+                            <p>Already have an account? <button type="button" className="auth-switch-link" onClick={onSwitchMode}>Sign in</button></p>
+                        ) : (
+                            <p>Already have an account? <Link to="/login">Sign in</Link></p>
+                        )}
                     </div>
                 </div>
             </div>

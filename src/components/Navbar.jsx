@@ -35,7 +35,7 @@ const LogoutIcon = () => (
     </svg>
 );
 
-export default function Navbar() {
+export default function Navbar({ onOpenAuth }) {
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -150,12 +150,8 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <>
-                            <Link to="/login">
-                                <button className="btn-ghost nav-btn">Sign In</button>
-                            </Link>
-                            <Link to="/register">
-                                <button className="btn-primary nav-btn">Get Started</button>
-                            </Link>
+                            <button className="btn-ghost nav-btn" onClick={() => onOpenAuth?.('login')}>Sign In</button>
+                            <button className="btn-primary nav-btn" onClick={() => onOpenAuth?.('register')}>Get Started</button>
                         </>
                     )}
 

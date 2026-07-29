@@ -14,6 +14,13 @@ const ACCENT_PRESETS = [
     { label: 'Gold', value: '#FFBD2E' },
 ];
 
+const FALLBACK_PROBLEMS = [
+    { id: 1, title: 'Two Sum', difficulty: 'Easy', tags: ['Arrays', 'Hash Map'], description: 'Practice this problem in the editor and use the AI Insight panel for guidance.' },
+    { id: 2, title: 'Valid Parentheses', difficulty: 'Medium', tags: ['Stack', 'Strings'], description: 'Practice this problem in the editor and use the AI Insight panel for guidance.' },
+    { id: 3, title: 'Binary Search', difficulty: 'Easy', tags: ['Arrays', 'Binary Search'], description: 'Practice this problem in the editor and use the AI Insight panel for guidance.' },
+    { id: 4, title: 'Longest Substring Without Repeating Characters', difficulty: 'Hard', tags: ['Hash Map', 'Sliding Window'], description: 'Practice this problem in the editor and use the AI Insight panel for guidance.' },
+];
+
 function getEditorPrefs() {
     try {
         return JSON.parse(localStorage.getItem('ci-editor-prefs') || '{}');
@@ -81,14 +88,18 @@ export default function Dashboard() {
         try {
             const res = await fetch(`${API}/codeinsight/problems`, { credentials: 'include' });
             const data = await res.json();
-            if (data.success) {
-                setProblems(data.problems.map(p => ({
+            const responseProblems = Array.isArray(data?.problems) ? data.problems : [];
+            const nextProblems = responseProblems.length > 0
+                ? responseProblems.map(p => ({
                     ...p,
                     tags: p.tags ? p.tags.split(',').map(t => t.trim()) : [],
-                })));
-            }
+                }))
+                : FALLBACK_PROBLEMS.map(p => ({ ...p, tags: Array.isArray(p.tags) ? p.tags : p.tags.split(',').map(t => t.trim()) }));
+            setProblems(nextProblems);
+            setError('');
         } catch (e) {
-            setError('Failed to load problems.');
+            setProblems(FALLBACK_PROBLEMS.map(p => ({ ...p, tags: Array.isArray(p.tags) ? p.tags : p.tags.split(',').map(t => t.trim()) })));
+            setError('');
         } finally {
             setLoading(false);
         }

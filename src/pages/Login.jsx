@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const API_BASE = '';
 
-export default function Login() {
+export default function Login({ compact = false, onClose, onSwitchMode, onSuccess }) {
     const [form, setForm] = useState({ username: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -56,7 +56,11 @@ export default function Login() {
                 localStorage.setItem('username', data.username);
                 localStorage.setItem('role', data.role);
                 localStorage.setItem('userId', data.userId);
-                navigate(data.role === 'admin' ? '/admin' : '/dashboard');
+                if (onSuccess) {
+                    onSuccess(data.role);
+                } else {
+                    navigate(data.role === 'admin' ? '/admin' : '/dashboard');
+                }
             } else {
                 setError(data.message || 'Invalid username or password.');
             }
@@ -91,6 +95,12 @@ export default function Login() {
                     position: relative;
                     overflow: hidden;
                 }
+                .lg-page--compact {
+                    min-height: auto;
+                    padding: 0;
+                    background: transparent;
+                    overflow: visible;
+                }
 
                 .lg-bg-grid {
                     position: fixed; inset: 0;
@@ -123,6 +133,50 @@ export default function Login() {
                     padding: 40px 36px;
                     backdrop-filter: blur(20px);
                     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+                }
+                .lg-card--compact {
+                    max-width: 100%;
+                    padding: 30px 24px;
+                    border: 1px solid rgba(255,255,255,0.12);
+                    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+                }
+                .lg-card--compact .lg-title {
+                    font-size: 24px;
+                }
+                .lg-card--compact .lg-subtitle {
+                    margin-bottom: 20px;
+                }
+                .auth-modal-close {
+                    position: absolute;
+                    top: 12px;
+                    right: 12px;
+                    border: none;
+                    background: rgba(255,255,255,0.08);
+                    color: rgba(255,255,255,0.75);
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: background 0.2s ease, transform 0.2s ease;
+                }
+                .auth-modal-close:hover {
+                    background: rgba(255,255,255,0.16);
+                    transform: rotate(90deg);
+                }
+                .auth-switch-link {
+                    border: none;
+                    background: none;
+                    color: #00d4ff;
+                    padding: 0;
+                    cursor: pointer;
+                    font-weight: 600;
+                    font-family: inherit;
+                }
+                .auth-switch-link:hover {
+                    text-decoration: underline;
                 }
                 @keyframes slideUp {
                     from { opacity: 0; transform: translateY(30px); }
@@ -308,12 +362,16 @@ export default function Login() {
                 }
             `}</style>
 
-            <div className="lg-page">
+            <div className={`lg-page ${compact ? 'lg-page--compact' : ''}`}>
                 <div className="lg-bg-grid" />
                 <div className="lg-orb1" />
                 <div className="lg-orb2" />
 
-                <div className="lg-card">
+                <div className={`lg-card ${compact ? 'lg-card--compact' : ''}`}>
+
+                    {compact && onClose && (
+                        <button type="button" className="auth-modal-close" onClick={onClose} aria-label="Close sign in dialog">✕</button>
+                    )}
 
                     {/* Logo */}
                     <Link to="/" className="lg-logo">
@@ -441,7 +499,11 @@ export default function Login() {
                     </div>
 
                     <div className="lg-footer">
-                        <p>Don't have an account? <Link to="/register">Create one free</Link></p>
+                        {compact && onSwitchMode ? (
+                            <p>Don't have an account? <button type="button" className="auth-switch-link" onClick={onSwitchMode}>Create one free</button></p>
+                        ) : (
+                            <p>Don't have an account? <Link to="/register">Create one free</Link></p>
+                        )}
                     </div>
 
                 </div>
